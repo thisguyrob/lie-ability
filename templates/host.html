@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Lie‑Ability – Host</title>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; background: #fdfdfd; }
+    h1 { margin-top: 0; }
+    .phase { font-size: 1.25rem; color: #666; }
+    .question { font-size: 1.5rem; margin-top: 1rem; }
+    .players { margin-top: 2rem; }
+    .player { margin: 0.25rem 0; }
+    #categoryOptions ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 0.5rem;
+    }
+
+    #categoryOptions button {
+      background: #c1126b;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    #categoryOptions button:hover {
+      transform: scale(1.05);
+      background: #a30e5a;
+    }
+    #timer {
+      transition: all 0.3s ease;
+    }
+
+    #timer.shrinking {
+      font-size: 2rem;
+      opacity: 1;
+    }
+
+    #timer.urgent {
+      color: red;
+      animation: flash-shake 0.4s infinite alternate;
+    }
+
+    @keyframes flash-shake {
+      0% { transform: translateX(0); opacity: 1; }
+      50% { transform: translateX(-2px); opacity: 0.6; }
+      100% { transform: translateX(2px); opacity: 1; }
+    }
+
+    #categoryOptions li {
+      padding: 0.5rem 1rem;
+      background: #f0f0f0;
+      margin: 0.25rem 0;
+      border-radius: 0.25rem;
+      font-weight: bold;
+    }
+    .marker {
+      display:inline-block;
+      width:12px; height:12px;
+      margin-left:.5rem;
+      border-radius:50%;
+      background:#ccc;          /* pending = grey */
+    }
+    .marker.done { background:#2ecc71; }  /* done = green */
+
+  </style>
+</head>
+<body>
+  <h1>Lie‑Ability – Host</h1>
+  <div class="phase" id="phaseLabel">Phase: …</div>
+  <div class="question" id="question">Question: …</div>
+  <div id="timer" style="font-size: 1.25rem; color: #c1126b; margin-top: 1rem;"></div>
+  <div id="categoryOptions" style="display:none;">
+    <h2>Choose a Category</h2>
+    <ul id="categoryList"></ul>
+  </div>
+
+  <div class="players">
+    <h2>Players</h2>
+    <ul id="playerList"></ul>
+  </div>
+  <p id="lobbyControls" style="display:none;">
+    <button id="startBtn" onclick="startGame()">🎮 Start Game</button>
+  </p>
+
+<script>
+  const socket = io({
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000
+  });
+
+  let latestState = {};
+
+  function startGame() {
+    console.log("🕹️ startGame() fired, players:", Object.keys(latestState.players||{}).length);
+    const playerCount = Object.keys(latestState.players || {}).length;
+    if (playerCount < 2) {
+      alert("At least 2 players are required to start the game.");
+      return;
+    }
+    fetch("/api/start_game", { method: "POST" })
+      .then(r => console.log("→ /api/start_game returned", r.status))
+      .catch(e => console.error("→ start_game fetch error", e));
+  }
+  socket.on("connect", () => {
+    console.log("🔌 Socket reconnected!");
+    document.body.style.border = "5px solid limegreen"; // visual confirmation
+  });
+  socket.on("disconnect", () => {
+    console.log("⚡ Socket disconnected!");
+    document.body.style.border = "5px solid red";
+  });
+
+  socket.on("state", data => {
+    console.log("📡 state event:", data.phase);
+    latestState = data;
+
+    let phaseText = "Phase: " + data.phase;
+    if (data.phase === "choose_category" && data.current_chooser && data.players?.[data.current_chooser]) {
+      phaseText += " — waiting for " + data.players[data.current_chooser].name;
+    }
+    document.getElementById("phaseLabel").textContent = phaseText;
+
+    document.getElementById("debugPhase").textContent = data.phase;
+
+    let questionText = "";
+    if (data.phase === "round_intro") {
+      switch (data.round) {
+        case 1:
+          questionText = "🎉 Round One Begins!";
+          break;
+        case 2:
+          questionText = "🔥 Round Two Begins!";
+          break;
+        case 3:
+          questionText = "🧠 Final Round Begins!";
+          break;
+        default:
+          questionText = `🔁 Round ${data.round} Begins!`;
+      }
+    } else {
+      questionText = data.current_question?.question || "(no question yet)";
+    }
+
+    document.getElementById("question").textContent = "Question: " + questionText;
+
+    const categoryBox = document.getElementById("categoryOptions");
+    const categoryList = document.getElementById("categoryList");
+
+    if (data.phase === "choose_category") {
+      categoryBox.style.display = "block";
+      categoryList.innerHTML = "";
+      (data.current_categories || []).forEach(cat => {
+        const li = document.createElement("li");
+        const btn = document.createElement("button");
+        btn.textContent = cat;
+        btn.style.fontSize = "1.1rem";
+        btn.style.padding = "0.5rem 1rem";
+        btn.onclick = () => {
+          socket.emit("choose_category", { category: cat });
+        };
+        li.appendChild(btn);
+        categoryList.appendChild(li);
+      });
+    } else {
+      categoryBox.style.display = "none";
+    }
+
+    const timerEl = document.getElementById("timer");
+
+    if (data.phase === "choose_category" && typeof data.timer === "number") {
+      timerEl.textContent = `⏱️ ${data.timer} seconds remaining to choose a category...`;
+
+      // Animate font size and flashing under 5s
+      timerEl.className = "shrinking" + (data.timer <= 5 ? " urgent" : "");
+      
+      // Optional: play sound when timer hits zero
+      if (data.timer === 0 && !timerEl.dataset.rang) {
+        timerEl.dataset.rang = "true";
+        const ding = new Audio("/static/ding.mp3"); // ← put a short sound in static/
+        ding.play().catch(() => {});
+      }
+    } else {
+      timerEl.textContent = "";
+      timerEl.className = "";
+      delete timerEl.dataset.rang;
+    }
+
+// Render player list
+const playerList = document.getElementById("playerList");
+playerList.innerHTML = "";
+
+Object.entries(data.players).forEach(([sid, player]) => {
+  // Decide if this player is “done” for the current phase
+  let done = false;
+  if (data.phase === "submit_lie") {
+    done = (data.submitted_lies || []).includes(sid);
+  } else if (data.phase === "pick_truth") {
+    done = (data.picks_submitted || []).includes(sid);
+  }
+
+  // Build <li>
+const li = document.createElement("li");
+li.className = "player";
+
+const name = document.createElement("span");
+name.textContent = `${player.name}${player.is_bot ? " (Bot)" : ""}`;
+
+const score = document.createElement("span");
+score.textContent = ` – ${player.score} pts`;
+
+const dot = document.createElement("span");
+dot.className = "marker" + (done ? " done" : "");
+
+li.appendChild(name);
+li.appendChild(score);
+li.appendChild(dot);
+
+
+  playerList.appendChild(li);
+});
+
+
+    document.getElementById("lobbyControls").style.display =
+      data.phase === "lobby" ? "block" : "none";
+  });
+</script>
+
+</body>
+<div id="debugPhase"
+     style="position:fixed;bottom:1rem;right:1rem;
+            background:#000;color:#fff;padding:0.25rem 0.5rem;
+            font-family:monospace;font-size:0.8rem;z-index:99999;">
+  (waiting)
+</div>
+</html>

@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Lie‑Ability – Player</title>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <style>
+    :root {
+      --brand:#c1126b;
+      --bg:#fdfdfd;
+      --text:#222;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; padding:2rem;
+      font-family:system-ui,sans-serif;
+      background:var(--bg); color:var(--text);
+    }
+    h1{margin-top:0}
+    button{
+      background:var(--brand); color:#fff;
+      border:none; border-radius:8px;
+      padding:0.5rem 1rem; font-size:1rem;
+      cursor:pointer; transition:transform .2s ease;
+    }
+    button:hover{transform:scale(1.05); background:#a30e5a;}
+    #timer{margin-top:1rem;font-size:1.5rem;color:var(--brand);transition:all .3s ease;}
+    #timer.shrinking{font-size:2rem;opacity:.9;}
+    #timer.urgent{color:red;animation:flash-shake .4s infinite alternate;}
+    @keyframes flash-shake{
+      0%{transform:translateX(0);opacity:1;}50%{transform:translateX(-2px);opacity:.6;}100%{transform:translateX(2px);opacity:1;}
+    }
+    .options,.likes-list{list-style:none;padding:0;}
+    .options li,.likes-list li{margin:.25rem 0;}
+    .options button{width:100%;text-align:left;padding:.75rem;font-size:1.1rem;}
+    .likes-list label{display:flex;align-items:center;gap:.5rem;padding:.5rem;background:#f0f0f0;border-radius:6px;cursor:pointer;}
+    .likes-list input{accent-color:var(--brand);}
+    .hidden{display:none;}
+    .scoreboard{margin-top:1.5rem;}
+    .scoreboard table{border-collapse:collapse;width:100%;}
+    .scoreboard th,.scoreboard td{border:1px solid #ccc;padding:.5rem;text-align:left;}
+  </style>
+</head>
+<body>
+  <h1>Lie‑Ability – Player</h1>
+  <div id="phaseLabel">Connecting…</div>
+  <div id="timer"></div>
+
+  <!-- CHOOSE CATEGORY -->
+  <section id="chooseCategory" class="hidden">
+    <h2></h2>
+    <ul id="categoryList" class="options"></ul>
+  </section>
+
+  <!-- SUBMIT LIE -->
+  <section id="submitLie" class="hidden">
+    <h2 id="questionText"></h2>
+    <form onsubmit="submitLie(event)">
+      <input type="text" id="lieInput" placeholder="Enter your lie…" required style="width:100%;padding:.75rem;font-size:1.1rem;"/>
+      <p style="margin-top:.5rem;">
+        <button type="submit">Submit Lie</button>
+        <button type="button" onclick="lieForMe()">Lie for me!</button>
+      </p>
+    </form>
+  </section>
+
+  <!-- PICK TRUTH -->
+  <section id="pickTruth" class="hidden">
+    <h2 id="pickQuestion"></h2>
+    <ul id="truthOptions" class="options"></ul>
+  </section>
+
+  <!-- LIKES -->
+  <section id="likes" class="hidden">
+    <h2>Show some ❤️ – like your favourite answers</h2>
+    <form onsubmit="submitLikes(event)">
+      <ul id="likesList" class="likes-list"></ul>
+      <p><button type="submit">Submit Likes</button></p>
+    </form>
+  </section>
+
+  <!-- SCOREBOARD / GAME OVER -->
+  <section id="scoreboard" class="hidden">
+    <h2>Scoreboard</h2>
+    <div class="scoreboard" id="scoreTable"></div>
+  </section>
+
+<script>
+  const socket = io({ reconnectionAttempts:5, reconnectionDelay:1000 });
+  let playerSid = null;
+  let latestState = {};
+  let chosenLikes = new Set();
+
+  // Prompt for name and join
+  const name = prompt("Enter your name:")?.trim() || "Player";
+  socket.emit("join", { name });
+
+  socket.on("joined", data => {
+    playerSid = data.sid;
+    console.log("✅ joined as", data.name, playerSid);
+  });
+
+  socket.on("state", state => {
+    latestState = state;
+    render(state);
+  });
+
+  socket.on("error", msg => alert(msg.message||msg));
+
+  function render(state){
+    document.getElementById("phaseLabel").textContent = "Phase: " + state.phase;
+    updateTimer(state);
+
+    // Hide all sections first
+    ["chooseCategory","submitLie","pickTruth","likes","scoreboard"].forEach(id=>document.getElementById(id).classList.add("hidden"));
+
+    switch(state.phase){
+      case "lobby":
+        // nothing interactive yet
+        break;
+      case "choose_category":
+        showChooseCategory(state);
+        break;
+      case "submit_lie":
+        showSubmitLie(state);
+        break;
+      case "pick_truth":
+        showPickTruth(state);
+        break;
+      case "likes":
+        showLikes(state);
+        break;
+      case "scoreboard":
+      case "game_over":
+        showScoreboard(state);
+        break;
+    }
+  }
+
+  /* ---------------- TIMER ---------------- */
+  function updateTimer(state){
+    const timerEl = document.getElementById("timer");
+    if(typeof state.timer === "number" && state.timer >= 0){
+      timerEl.textContent = `⏱️ ${state.timer}s`;
+      timerEl.className = "shrinking" + (state.timer<=5?" urgent":"");
+    }else{
+      timerEl.textContent = "";
+      timerEl.className = "";
+    }
+  }
+
+  /* ---------------- CHOOSE CATEGORY ---------------- */
+  function showChooseCategory(state){
+    const sect = document.getElementById("chooseCategory");
+    sect.classList.remove("hidden");
+    const ul = document.getElementById("categoryList");
+    ul.innerHTML = "";
+
+    const isChooser = playerSid === state.current_chooser;
+    const chooserName = state.players?.[state.current_chooser]?.name || "someone";
+
+    // Update heading based on whether this player is the chooser
+    sect.querySelector("h2").textContent = isChooser
+      ? "Choose a Category"
+      : `${chooserName} is choosing a category…`;
+
+    if (!isChooser) {
+      return; // show the heading only — not the buttons
+    }
+
+    (state.current_categories || []).forEach(cat => {
+      const li = document.createElement("li");
+      const btn = document.createElement("button");
+      btn.textContent = cat;
+      btn.onclick = () => socket.emit("choose_category", { category: cat });
+      li.appendChild(btn);
+      ul.appendChild(li);
+    });
+  }
+
+  /* ---------------- SUBMIT LIE ---------------- */
+  function showSubmitLie(state){
+    const sect=document.getElementById("submitLie");
+    sect.classList.remove("hidden");
+    document.getElementById("questionText").textContent = state.current_question?.question || "…";
+    // disable input if already submitted
+    const submitted = (state.submitted_lies||[]).includes(playerSid);
+    document.getElementById("lieInput").disabled = submitted;
+  }
+  function submitLie(e){
+    e.preventDefault();
+    const val=document.getElementById("lieInput").value.trim();
+    if(!val)return;
+    socket.emit("submit_lie",{lie:val});
+    document.getElementById("lieInput").value="";
+  }
+function lieForMe(){
+  socket.emit("submit_lie", { lie: "" });
+}
+
+  /* ---------------- PICK TRUTH ---------------- */
+  function showPickTruth(state){
+    const sect=document.getElementById("pickTruth");
+    sect.classList.remove("hidden");
+    document.getElementById("pickQuestion").textContent = state.current_question?.question || "…";
+    const ul=document.getElementById("truthOptions");
+    ul.innerHTML="";
+    const alreadyPicked=(state.picks_submitted||[]).includes(playerSid);
+    (state.options||[]).forEach(opt=>{
+      const li=document.createElement("li");
+      const btn=document.createElement("button");
+      btn.textContent=opt;
+      btn.disabled=alreadyPicked;
+      btn.onclick=()=>socket.emit("pick_truth",{choice:opt});
+      li.appendChild(btn);
+      ul.appendChild(li);
+    });
+  }
+
+  /* ---------------- LIKES ---------------- */
+  function showLikes(state){
+    const sect=document.getElementById("likes");
+    sect.classList.remove("hidden");
+    const list=document.getElementById("likesList");
+    list.innerHTML="";
+    chosenLikes = new Set();
+    (state.options||[]).forEach(opt=>{
+      const id="like_"+btoa(opt);
+      const li=document.createElement("li");
+      const label=document.createElement("label");
+      const cb=document.createElement("input");
+      cb.type="checkbox"; cb.id=id; cb.value=opt;
+      cb.onchange=e=>{
+        if(e.target.checked)chosenLikes.add(opt); else chosenLikes.delete(opt);
+      };
+      const span=document.createElement("span"); span.textContent=opt;
+      label.appendChild(cb); label.appendChild(span);
+      li.appendChild(label);
+      list.appendChild(li);
+    });
+  }
+  function submitLikes(e){
+    e.preventDefault();
+    socket.emit("like",{liked:[...chosenLikes]});
+  }
+
+  /* ---------------- SCOREBOARD ---------------- */
+  function showScoreboard(state){
+    const sect=document.getElementById("scoreboard");
+    sect.classList.remove("hidden");
+    const div=document.getElementById("scoreTable");
+    const players=Object.values(state.players||{}).sort((a,b)=>b.score-a.score);
+    div.innerHTML = `
+      <table><thead><tr><th>Player</th><th>Score</th><th>Likes</th><th>Fooled</th></tr></thead>
+      <tbody>
+        ${players.map(p=>`<tr><td>${p.name}${p.is_bot?" (Bot)":""}</td><td>${p.score}</td><td>${p.likes}</td><td>${p.deceptions}</td></tr>`).join("")}
+      </tbody></table>`;
+    if(state.phase==="game_over"){
+      const winner=players[0];
+      const msg=document.createElement("p");
+      msg.textContent=`🏆 ${winner.name} wins the game!`;
+      div.appendChild(msg);
+    }
+  }
+</script>
+
+</body>
+</html>
+
