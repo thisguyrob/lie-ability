@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Lie‑Ability Debug</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; }
+    button { margin: 0.25rem 0.5rem; padding: 0.5rem 1rem; font-size: 1rem; }
+    pre { background: #f5f5f5; padding: 1rem; overflow: auto; max-height: 40vh; }
+    table { border-collapse: collapse; margin-top: 1rem; }
+    th, td { padding: 0.5rem 1rem; border: 1px solid #ccc; text-align: left; }
+    input[type=number] { width: 5rem; }
+  </style>
+</head>
+<body>
+  <h1>Lie‑Ability Debug Console</h1>
+
+  <p>
+    <button onclick="post('/api/next_question')">Next Question</button>
+    <button onclick="post('/api/advance_phase')">Advance Phase</button>
+    <button onclick="post('/api/reset')">Reset Game</button>
+    <button onclick="applyPlayerStats()">Apply Player Stats</button>
+  </p>
+  <p>
+    <input type="text" id="botName" placeholder="Optional bot name"
+           onkeydown="if (event.key === 'Enter') addBot()" />
+    <button onclick="addBot()">Add Bot Player</button>
+  </p>
+
+  <h2>Game State</h2>
+  <pre id="state">loading…</pre>
+
+  <h2>Player Controls</h2>
+  <table id="playerTable">
+    <thead>
+      <tr><th>Name</th><th>Score</th><th>Likes</th><th>Deceptions</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    let latestState = {};
+
+    function post(url) {
+      fetch(url, { method: 'POST' }).then(refresh);
+    }
+
+    function refresh() {
+      fetch('/api/state')
+        .then(r => r.json())
+        .then(js => {
+          latestState = js;
+          document.getElementById('state').textContent = JSON.stringify(js, null, 2);
+          updatePlayerTable(js.players);
+        });
+    }
+
+    function updatePlayerTable(players) {
+      const tbody = document.querySelector('#playerTable tbody');
+      tbody.innerHTML = '';
+
+      Object.entries(players).forEach(([sid, player]) => {
+        const row = document.createElement('tr');
+
+        row.innerHTML = `
+          <td>${player.name}</td>
+          <td><input type="number" value="${player.score}" data-sid="${sid}" data-field="score" /></td>
+          <td><input type="number" value="${player.likes}" data-sid="${sid}" data-field="likes" /></td>
+          <td><input type="number" value="${player.deceptions}" data-sid="${sid}" data-field="deceptions" /></td>
+        `;
+
+        tbody.appendChild(row);
+      });
+
+      // Attach event listeners after row is inserted
+      const inputs = tbody.querySelectorAll('input');
+      inputs.forEach(input => {
+        const sid = input.dataset.sid;
+
+        // Trigger on Enter key
+        input.addEventListener("keydown", e => {
+          if (e.key === "Enter") {
+            applySinglePlayerStats(sid);
+          }
+        });
+
+        // Trigger on change (e.g., arrow up/down, or losing focus)
+        input.addEventListener("change", () => {
+          applySinglePlayerStats(sid);
+        });
+      });
+    }
+
+    function applySinglePlayerStats(sid) {
+      const inputs = document.querySelectorAll(`#playerTable input[data-sid="${sid}"]`);
+      const update = {};
+      inputs.forEach(input => {
+        const field = input.dataset.field;
+        const value = parseInt(input.value, 10);
+        update[field] = isNaN(value) ? 0 : value;
+      });
+
+      fetch('/api/update_player_stats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ players: { [sid]: update } })
+      }).then(refresh);
+    }
+
+    function resetPlayerStats(sid) {
+      fetch(`/api/reset_player/${sid}`, { method: 'POST' }).then(refresh);
+    }
+
+    function kickPlayer(sid) {
+      fetch(`/api/remove_player/${sid}`, { method: 'POST' }).then(refresh);
+    }
+
+    function addBot() {
+      const name = document.getElementById("botName").value;
+      fetch("/api/add_bot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name })
+      }).then(() => {
+        document.getElementById("botName").value = "";
+        refresh();
+      });
+    }
+    function applyPlayerStats() {
+      const inputs = document.querySelectorAll('#playerTable input');
+      const updates = {};
+
+      inputs.forEach(input => {
+        const sid = input.dataset.sid;
+        const field = input.dataset.field;
+        const value = parseInt(input.value, 10);
+
+        if (!updates[sid]) updates[sid] = {};
+        updates[sid][field] = isNaN(value) ? 0 : value;
+      });
+
+      fetch('/api/update_player_stats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ players: updates })
+      }).then(refresh);
+    }
+
+    setInterval(refresh, 1000);
+    refresh();
+  </script>
+</body>
+</html>
