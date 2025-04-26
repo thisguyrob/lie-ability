@@ -1,0 +1,205 @@
+{
+  "round_one": [
+    {
+      "category": "History",
+      "question": "In 1840, what item did U.S. President William Henry Harrison stubbornly refuse to wear at his freezing inauguration?",
+      "answer": "Coat",
+      "lies": ["Top hat", "Gloves", "Scarf", "Socks", "Overcoat", "Cape", "Thermal underwear", "Poncho"],
+      "audio_file": null
+    },
+    {
+      "category": "Animals",
+      "question": "A group of flamingos is traditionally called a what?",
+      "answer": "Flamboyance",
+      "lies": ["Flock", "Gaggle", "Cluster", "Herd", "Parade", "Glamour", "Swarm", "Plume"],
+      "audio_file": null
+    },
+    {
+      "category": "Food",
+      "question": "What fruit was once known as a 'love apple' in 18th-century Europe?",
+      "answer": "Tomato",
+      "lies": ["Peach", "Strawberry", "Apple", "Pomegranate", "Pear", "Fig", "Cherry", "Raspberry"],
+      "audio_file": null
+    },
+    {
+      "category": "Sports",
+      "question": "Which sport's original rules prohibited dribbling?",
+      "answer": "Basketball",
+      "lies": ["Soccer", "Hockey", "Baseball", "Volleyball", "Tennis", "Football", "Cricket", "Lacrosse"],
+      "audio_file": null
+    },
+    {
+      "category": "Geography",
+      "question": "Which country has the most time-zones?",
+      "answer": "France",
+      "lies": ["Russia", "USA", "China", "Canada", "Brazil", "Australia", "India", "Mexico"],
+      "audio_file": null
+    },
+    {
+      "category": "Music",
+      "question": "Who was nicknamed the 'King of Pop'?",
+      "answer": "Michael Jackson",
+      "lies": ["Elvis Presley", "Prince", "James Brown", "Stevie Wonder", "Freddie Mercury", "Justin Timberlake", "Madonna", "Usher"],
+      "audio_file": null
+    },
+    {
+      "category": "Science",
+      "question": "What planet in our solar system has the shortest day?",
+      "answer": "Jupiter",
+      "lies": ["Mercury", "Venus", "Earth", "Mars", "Saturn", "Uranus", "Neptune", "Pluto"],
+      "audio_file": null
+    },
+    {
+      "category": "Literature",
+      "question": "Who wrote the line 'To be, or not to be'?",
+      "answer": "Shakespeare",
+      "lies": ["Hemingway", "Dickens", "Tolstoy", "Austen", "Twain", "Poe", "Orwell", "Chaucer"],
+      "audio_file": null
+    },
+    {
+      "category": "Inventions",
+      "question": "Who is credited with inventing the light bulb?",
+      "answer": "Thomas Edison",
+      "lies": ["Nikola Tesla", "Alexander Graham Bell", "Benjamin Franklin", "Albert Einstein", "James Watt", "Isaac Newton", "Michael Faraday", "Louis Pasteur"],
+      "audio_file": null
+    },
+    {
+      "category": "TV",
+      "question": "What color is the 'Powerpuff Girl' Bubbles known for?",
+      "answer": "Blue",
+      "lies": ["Pink", "Green", "Yellow", "Purple", "Orange", "Red", "Teal", "White"],
+      "audio_file": null
+    },
+    {
+      "category": "Art",
+      "question": "Which artist painted the ceiling of the Sistine Chapel?",
+      "answer": "Michelangelo",
+      "lies": ["Da Vinci", "Raphael", "Donatello", "Rembrandt", "Van Gogh", "Picasso", "Caravaggio", "Botticelli"],
+      "audio_file": null
+    },
+    {
+      "category": "Language",
+      "question": "Which English word is the longest without a vowel?",
+      "answer": "Rhythms",
+      "lies": ["Crypts", "Gypsy", "Lynx", "Myths", "Trysts", "Flyby", "Spryly", "Scry"],
+      "audio_file": null
+    }
+  ],
+  "round_two": [
+    {
+      "category": "Movies",
+      "question": "Which 1984 film popularised the quote 'I'll be back'?",
+      "answer": "The Terminator",
+      "lies": ["RoboCop", "Predator", "Die Hard", "Commando", "Aliens", "Mad Max", "Total Recall", "Running Man"],
+      "audio_file": null
+    },
+    {
+      "category": "Tech",
+      "question": "What company created the first mass-produced computer mouse?",
+      "answer": "Apple",
+      "lies": ["IBM", "Microsoft", "HP", "Xerox", "Dell", "Atari", "Intel", "Sony"],
+      "audio_file": null
+    },
+    {
+      "category": "Fashion",
+      "question": "Which luxury brand's logo features two interlocking C's?",
+      "answer": "Chanel",
+      "lies": ["Cartier", "Coach", "Calvin Klein", "Christian Dior", "Gucci", "Versace", "Balenciaga", "Fendi"],
+      "audio_file": null
+    },
+    {
+      "category": "Mythology",
+      "question": "In Greek myth, who turned everything he touched to gold?",
+      "answer": "Midas",
+      "lies": ["Zeus", "Apollo", "Achilles", "Hermes", "Dionysus", "Hades", "Ares", "Poseidon"],
+      "audio_file": null
+    },
+    {
+      "category": "TV",
+      "question": "What is the name of the coffee shop in the sitcom 'Friends'?",
+      "answer": "Central Perk",
+      "lies": ["Daily Brew", "The Bean Scene", "Perk Up", "Coffee House", "Brew Bros", "Cafe Manhattan", "Caffeine Corner", "The Grind"],
+      "audio_file": null
+    },
+    {
+      "category": "Language",
+      "question": "What is the most commonly spoken native language in the world?",
+      "answer": "Mandarin",
+      "lies": ["English", "Hindi", "Spanish", "Arabic", "Portuguese", "Russian", "Bengali", "Japanese"],
+      "audio_file": null
+    },
+    {
+      "category": "Games",
+      "question": "What classic board game was originally called 'The Landlord's Game'?",
+      "answer": "Monopoly",
+      "lies": ["Clue", "Life", "Sorry!", "Risk", "Catan", "Checkers", "Chess", "Operation"],
+      "audio_file": null
+    },
+    {
+      "category": "Space",
+      "question": "What is the name of the first artificial Earth satellite?",
+      "answer": "Sputnik",
+      "lies": ["Apollo", "Voyager", "Luna", "Cosmos", "Saturn I", "Galileo", "Soyuz", "Enterprise"],
+      "audio_file": null
+    },
+    {
+      "category": "Music",
+      "question": "Which band released the album 'Abbey Road'?",
+      "answer": "The Beatles",
+      "lies": ["The Rolling Stones", "The Who", "Queen", "Pink Floyd", "Led Zeppelin", "U2", "Radiohead", "The Kinks"],
+      "audio_file": null
+    },
+    {
+      "category": "Science",
+      "question": "What gas do plants absorb from the atmosphere?",
+      "answer": "Carbon Dioxide",
+      "lies": ["Oxygen", "Nitrogen", "Hydrogen", "Methane", "Helium", "Neon", "Argon", "Sulfur Dioxide"],
+      "audio_file": null
+    },
+    {
+      "category": "History",
+      "question": "Who was the first woman to fly solo across the Atlantic?",
+      "answer": "Amelia Earhart",
+      "lies": ["Bessie Coleman", "Sally Ride", "Valentina Tereshkova", "Harriet Quimby", "Jacqueline Cochran", "Ruth Nichols", "Louise Thaden", "Jeana Yeager"],
+      "audio_file": null
+    },
+    {
+      "category": "Comics",
+      "question": "What superhero's alter ego is Bruce Wayne?",
+      "answer": "Batman",
+      "lies": ["Superman", "Spider-Man", "Iron Man", "The Flash", "Green Lantern", "Hawkeye", "Captain America", "Aquaman"],
+      "audio_file": null
+    }
+  ],
+  "final_round": [
+    {
+      "category": "Misc",
+      "question": "What word names both a punctuation mark and a small tropical fish?",
+      "answer": "Guppy",
+      "lies": ["Comma", "Dot", "Colon", "Dash", "Semi", "Ampersand", "Bracket", "Quote"],
+      "audio_file": null
+    },
+    {
+      "category": "Bonus",
+      "question": "The dot over a lowercase 'i' or 'j' has a specific name. What is it?",
+      "answer": "Tittle",
+      "lies": ["Jot", "Speck", "Nib", "Flick", "Dab", "Wink", "Tip", "Pixel"],
+      "audio_file": null
+    },
+    {
+      "category": "Bonus",
+      "question": "Which U.S. state's official flag is not rectangular?",
+      "answer": "Ohio",
+      "lies": ["Texas", "Alaska", "Hawaii", "Florida", "California", "Nevada", "New Mexico", "Louisiana"],
+      "audio_file": null
+    },
+    {
+      "category": "Bonus",
+      "question": "In computing, what does the acronym 'RAM' stand for?",
+      "answer": "Random Access Memory",
+      "lies": ["Read-Only Memory", "Rapid Allocation Module", "Random Allocation Machine", "Reactive Access Management", "Run-time Active Memory", "Remote Access Mode", "Ramified Application Memory", "Rate-Assessed Memory"],
+      "audio_file": null
+    }
+  ]
+}
+
