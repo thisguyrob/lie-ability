@@ -95,7 +95,7 @@
   let latestState = {};
 
   function startGame() {
-    console.log("🕹️ startGame() fired, players:", Object.keys(latestState.players||{}).length);
+    console.log("🕹 start game");
     const playerCount = Object.keys(latestState.players || {}).length;
     if (playerCount < 2) {
       alert("At least 2 players are required to start the game.");
@@ -172,7 +172,7 @@
     const timerEl = document.getElementById("timer");
 
     if (data.phase === "choose_category" && typeof data.timer === "number") {
-      timerEl.textContent = `⏱️ ${data.timer} seconds remaining to choose a category...`;
+      timerEl.textContent = `⏱ ${data.timer}`;
 
       // Animate font size and flashing under 5s
       timerEl.className = "shrinking" + (data.timer <= 5 ? " urgent" : "");
