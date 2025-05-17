@@ -545,6 +545,13 @@ def on_disconnect():
         name = game.players[request.sid].name
         del game.players[request.sid]
         log.info("[Leave] %s", name)
+        if game.phase == "choose_category" and request.sid == game.current_chooser:
+            # Chooser left during selection → auto pick a category
+            if game.current_categories:
+                chosen = random.choice(game.current_categories)
+                log.info("[Auto] Chooser left, auto-picking %s", chosen)
+                game.next_question_by_category(chosen)
+            game.current_chooser = None
         socketio.emit("state", game.to_json())
 
 @app.get("/api/state")
