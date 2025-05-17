@@ -87,7 +87,7 @@ Organize into `round_one`, `round_two`, etc.
 ## Game Flow Overview
 
 1. **Lobby**: Players join and enter names.
-2. **Category Choose**: A rotating player picks a question category.
+2. **Choose Category**: A rotating player picks a question category.
 3. **Submit Lies**: Everyone invents and submits their fake answer.
 4. **Pick Truth**: All options (one truth, many lies) are shown. Players guess the truth.
 5. **Likes**: Players can “like” their favorite lies.
