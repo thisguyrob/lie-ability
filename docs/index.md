@@ -16,6 +16,7 @@ Welcome to the **Lie‑Ability** documentation hub — your one‑stop guide to 
 | 🔄 **WebSocket API**  | [docs/api/websocket.md](./api/websocket.md)       |
 | 🛠️ **Dev Setup**     | [docs/dev/setup.md](./dev/setup.md)               |
 | 🐳 **Docker Guide**   | [docs/dev/docker.md](./dev/docker.md)             |
+| 📴 **Offline Setup**  | [docs/dev/offline.md](./dev/offline.md)           |
 | 🤝 **Contributing**   | [docs/dev/contributing.md](./dev/contributing.md) |
 
 ---
