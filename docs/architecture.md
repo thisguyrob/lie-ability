@@ -78,7 +78,7 @@ cd frontend && npm ci && npm run build
 uvicorn backend.main:app --reload  # http://localhost:8000
 ```
 
-Then open `http://localhost:5173` (player) and `http://localhost:5173/shared` (shared display).
+Then open `http://localhost:5173` (player) and `http://localhost:5173/host` (shared display).
 
 ### 2. Docker Compose
 

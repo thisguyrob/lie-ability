@@ -42,7 +42,7 @@ $ cd frontend && npm run dev &
 
 # 3 • Open your browser
 # Player view: http://localhost:5173
-# Shared display: http://localhost:5173/shared
+# Shared display: http://localhost:5173/host
 ```
 
 Running `./start.sh -n` performs these steps for you automatically.

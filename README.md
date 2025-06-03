@@ -42,7 +42,7 @@ This will:
 If the browser does not open, visit:
 
 * Player view: <http://localhost:5173>
-* Shared display: <http://localhost:5173/shared>
+* Shared display: <http://localhost:5173/host>
 
 > 🧪 Not tested on Windows yet — PRs welcome!
 

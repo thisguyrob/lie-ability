@@ -18,15 +18,15 @@ if [ "$USE_NATIVE" = true ]; then
   (cd frontend && npm run dev) &
   FRONT_PID=$!
 
-  # Attempt to open the shared display automatically
+  # Attempt to open the host view automatically
   if command -v xdg-open >/dev/null; then
-    xdg-open http://localhost:5173/shared >/dev/null 2>&1 &
+    xdg-open http://localhost:5173/host >/dev/null 2>&1 &
   elif command -v open >/dev/null; then
-    open http://localhost:5173/shared >/dev/null 2>&1 &
+    open http://localhost:5173/host >/dev/null 2>&1 &
   fi
 
   echo "Player view: http://localhost:5173"
-  echo "Shared display: http://localhost:5173/shared"
+  echo "Host view: http://localhost:5173/host"
 
   trap 'kill $BACK_PID $FRONT_PID' INT TERM
   wait
