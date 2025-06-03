@@ -1,0 +1,24 @@
+version: "3.9"
+services:
+  backend:
+    build: ./backend
+    env_file: .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: lie
+      POSTGRES_PASSWORD: ability
+      POSTGRES_DB: lieability
+  redis:
+    image: redis:7-alpine
