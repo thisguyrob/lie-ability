@@ -2,10 +2,10 @@
 
 **Version:** `v1`  |  **Base URL:** `http(s)://<host>:8000` (native) / `http://localhost` (Docker) 
 
-This document specifies all HTTP & WebSocket interfaces exposed by the Lie‑Ability game server.  All routes are mounted under `/api/v1` except the WebSocket, which is `/ws`.
+This document specifies all HTTP and WebSocket interfaces for the Lie‑Ability game server. The server mounts all routes under `/api/v1` and exposes the WebSocket at `/ws`.
 
 > **Tech stack**: FastAPI + Uvicorn + SQLAlchemy + Redis Pub/Sub.
-> JSON payloads use **camelCase** keys.  All examples are truncated for brevity.
+> JSON payloads use **camelCase** keys. We truncate examples for brevity.
 
 ---
 
@@ -75,7 +75,7 @@ wss://<host>/ws/lobbies/{code}?token=<jwt>
 ```
 
 * Requires a valid JWT; server disconnects after 3 × failed pings.
-* Binary messages are ignored.
+* The server ignores binary messages.
 
 ### 3.2 Envelope Format
 
@@ -182,7 +182,7 @@ ws.onmessage = (e) => console.log(JSON.parse(e.data));
 
 ---
 
-## 8 · TODO / Future Endpoints
+## 8 · Future Endpoints
 
 * `GET /stats/global` – fetch global leaderboard.
 * `POST /games/{id}/chat` – in‑game chatter.

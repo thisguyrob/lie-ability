@@ -156,7 +156,7 @@ SQLite in dev; PostgreSQL in Docker/prod.
 
 ## 10 · VS Code Devcontainer *(optional)*
 
-A `.devcontainer` folder is included.
+The repository includes a `.devcontainer` folder.
 
 ```bash
 # inside VS Code

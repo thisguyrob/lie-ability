@@ -2,7 +2,7 @@
 
 *Last updated: 2025‑06‑02*
 
-This document describes the public‑facing HTTP and WebSocket APIs exposed by the **Lie‑Ability** game server.  All traffic is JSON‑encoded (UTF‑8) and served over HTTPS or `ws[s]://` in production; plain HTTP/WebSocket is allowed in local development.
+This document describes the public-facing HTTP and WebSocket APIs for the **Lie‑Ability** game server. The server encodes all traffic as JSON (UTF‑8). Production uses HTTPS or `ws[s]://`, while local development permits plain HTTP and WebSocket.
 
 > **Scope**
 > ‑ High‑level resource map for REST endpoints
@@ -114,7 +114,7 @@ interface Scoreboard {
 }
 ```
 
-Full JSON Schema files live under `backend/schemas/` and are bundled into the auto‑generated **ReDoc** docs (`make redoc`).
+The auto-generated **ReDoc** docs bundle the full JSON Schema files from `backend/schemas/` (`make redoc`).
 
 ---
 
@@ -122,7 +122,7 @@ Full JSON Schema files live under `backend/schemas/` and are bundled into the au
 
 * **REST** – 60 req/min per IP (429 on exceed).
 * **WebSocket** – heartbeat ping every 15 s, disconnect after 40 s of silence.
-* Lie submission / voting windows enforced server‑side; late packets are NACKed with `error { code:"timeout" }`.
+* The server enforces lie submission and voting windows; it NACKs late packets with `error { code:"timeout" }`.
 
 ---
 

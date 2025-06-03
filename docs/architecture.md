@@ -2,7 +2,7 @@
 
 ## Overview
 
-Lie‑Ability is a real‑time, bluff‑based trivia game designed to run on a single host machine but be played across many personal devices.  The system is composed of a **Python backend** that maintains game state and a **TypeScript frontend** rendered twice: once as the **Shared Display** (projector/TV) and once per **Player Device** (phones/tablets).  All views communicate with the backend through WebSockets for sub‑second bidirectional updates.
+Lie‑Ability is a real‑time, bluff‑based trivia game that runs on a single host machine and lets players connect from personal devices. The system combines a **Python backend** that maintains game state with a **TypeScript frontend** shown on the **Shared Display** (projector/TV) and on each **Player Device** (phones/tablets). All views communicate with the backend through WebSockets for sub‑second updates.
 
 > **Goals**
 >
@@ -63,7 +63,7 @@ stateDiagram-v2
 * **Reveal** – truth exposed, points assigned.
 * **Scores** – running tally & winner highlight; repeat or end.
 
-All state changes are emitted over WebSocket events; the client views render purely from the last known state.
+The server emits all state changes over WebSocket events, and the client views render solely from the last known state.
 
 ---
 
@@ -151,7 +151,7 @@ lie-ability/
 | `APP_ENV`      | `dev`                      | `dev` = hot‑reload; `prod` = optimized |
 | `DATABASE_URL` | `sqlite:///lieability.db`  | SQLAlchemy DSN                         |
 | `REDIS_URL`    | `redis://localhost:6379/0` | Pub/Sub broker                         |
-| `SECRET_KEY`   | *generate*                 | JWT & session signing                  |
+| `SECRET_KEY`   | `please_change_me`                 | JWT & session signing                  |
 
 Place overrides in `.env` (read by both Docker & native launcher).
 
