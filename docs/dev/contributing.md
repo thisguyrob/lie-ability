@@ -6,7 +6,7 @@
 
 ## 1 · Ground Rules
 
-1. **Be kind & constructive.**  We follow the [Contributor Covenant](../CODE_OF_CONDUCT.md).
+1. **Be kind & constructive.**  We follow the [Contributor Covenant](https://contributor-covenant.org/version/2/1/code_of_conduct/).
 2. **No spoilers.**  Don’t submit copyrighted trivia prompts.
 3. **Respect the license (CC BY‑NC 4.0)** — your PR means you agree to release your contribution under the same terms.
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Lie‑Ability is a light‑hearted bluff‑and‑guess trivia game for **2 – 8 players**.  Each round delivers an obscure prompt; players must invent a believable lie while spotting the truth themselves. Points are awarded for:
+Lie‑Ability is a light‑hearted bluff‑and‑guess trivia game for **2 – 8 players**.  Each round delivers an obscure prompt; players must invent a believable lie while spotting the truth themselves. You earn points for:
 
 * **Truth Sleuth** – choosing the real answer.
 * **Master Liar** – fooling friends into picking your lie.
@@ -23,11 +23,10 @@ A standard game lasts **3 rounds** (≈ 15 min), but the host can restart with t
 ---
 
 ## Joining a Game
-
 1. Host opens the **Shared Display** (TV/projector) – it shows a QR code containing the lobby URL (LAN‑only or public, configurable).
 2. Players scan or type the URL on a personal device.
-3. Choose a nickname & avatar (emoji carousel + color wheel). Duplicate names are blocked.
-4. When **≥ 2 players** have joined, the **Start Game** button is enabled for the host.
+3. Choose a nickname & avatar (emoji carousel + color wheel). The server blocks duplicate names.
+4. Once at least two players join, the host can press the **Start Game** button.
 
 > **Zero‑install onboarding** – everything runs in a mobile browser.
 
@@ -68,7 +67,7 @@ sequenceDiagram
 
 Round multipliers: × 2 in round 2, × 3 in the final round.
 
-*Tie‑breakers*: If scores tie, multiple winners are crowned – bragging rights shared!
+*Tie‑breakers*: If scores tie, the game crowns multiple winners so everyone shares bragging rights!
 
 ---
 
@@ -88,7 +87,7 @@ category,prompt,answer
 "TRIVIA TIME","Mickey Mouse's middle name is _____.","Theodore"
 ```
 
-Each row becomes one prompt; duplicate categories are grouped in‑game.
+The game groups duplicate categories, with each row becoming one prompt.
 
 ---
 
