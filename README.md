@@ -36,8 +36,13 @@ All you need is:
 
 This will:
 
-* Launch the server
-* Open the shared display in a new browser window
+* Launch the backend and frontend dev servers
+* Try to open the shared display automatically (see output)
+
+If the browser does not open, visit:
+
+* Player view: <http://localhost:5173>
+* Shared display: <http://localhost:5173/shared>
 
 > 🧪 Not tested on Windows yet — PRs welcome!
 
