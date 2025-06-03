@@ -2,30 +2,45 @@ name: CI
 on: [push, pull_request]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
-    services:
-      docker:
-        image: docker:dind
-        options: --privileged
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Install Python deps
-        run: |
-          python -m pip install -r backend/requirements.txt pytest
-      - name: Pytest
-        run: pytest
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - name: Install Node deps
-        run: |
-          cd frontend && npm ci
-      - name: Lint
-        run: |
-          cd frontend && npm run lint
-      - name: Docker build
-        run: docker compose build
+    - uses: actions/checkout@v4
+
+    # ---------- Python ----------
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install Python deps
+      run: |
+        python -m pip install -r backend/requirements.txt
+
+    - name: Pytest
+      run: |
+        cd backend
+        pytest -q
+
+    # ---------- Node ----------
+    - name: Set up Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: npm
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install Node deps
+      run: |
+        cd frontend
+        npm ci
+
+    - name: ESLint
+      run: |
+        cd frontend
+        npm run lint
+
+    # ---------- Docker build check ----------
+    - uses: docker/setup-buildx-action@v3
+    - name: Docker compose build
+      run: docker compose build --progress plain
