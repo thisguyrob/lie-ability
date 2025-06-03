@@ -4,6 +4,24 @@ from pydantic import BaseModel
 from typing import Literal
 
 
+Phase = Literal[
+    "LOBBY",
+    "LIE_SUBMISSION",
+    "VOTING",
+    "REVEAL",
+    "SCOREBOARD",
+    "GAME_OVER",
+]
+
+
+class Choice(BaseModel):
+    """Selectable option shown during voting."""
+
+    id: str
+    text: str
+    author_id: str | None
+
+
 class Player(BaseModel):
     """Player state."""
 

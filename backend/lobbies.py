@@ -7,6 +7,7 @@ from typing import Dict
 
 from .auth import encode
 from .game.models import Lobby, Player
+from .game import engine
 
 _lobbies: Dict[str, Lobby] = {}
 
@@ -43,3 +44,4 @@ def add_player(code: str, nickname: str, avatar: str) -> tuple[Player, str]:
 def start_game(code: str) -> None:
     lobby = _lobbies[code]
     lobby.state = "IN_GAME"
+    engine.start_game(lobby)

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import time
+import json
 from collections import defaultdict
 from typing import Dict, List
 
@@ -17,6 +18,7 @@ from fastapi.responses import Response
 
 from . import lobbies
 from .auth import decode
+from .game import engine
 from .game.models import Lobby
 
 app = FastAPI(title="Lie-Ability")
@@ -132,10 +134,31 @@ async def lobby_ws(websocket: WebSocket, code: str, token: str | None = None) ->
         return
     await websocket.accept()
     _connections[code].append(websocket)
+    engine.register_broadcaster(code, websocket.send_json)
     await broadcast_lobby_update(code)
+    player_id: str = str(payload.get("sub", ""))
     try:
         while True:
-            await websocket.receive_text()
+            raw = await websocket.receive_text()
+            try:
+                message = json.loads(raw)
+            except json.JSONDecodeError:
+                await websocket.send_json(
+                    {
+                        "type": "error",
+                        "payload": {"code": "BAD_JSON", "message": "Malformed"},
+                        "ts": int(time.time() * 1000),
+                    }
+                )
+                continue
+            msg_type = message.get("type")
+            if msg_type == "submit_lie":
+                text = str(message.get("payload", {}).get("text", ""))
+                await engine.submit_lie(code, player_id, text)
+            elif msg_type == "submit_vote":
+                cid = str(message.get("payload", {}).get("choiceId", ""))
+                await engine.submit_vote(code, player_id, cid)
     except WebSocketDisconnect:
         _connections[code].remove(websocket)
+        engine.unregister_broadcaster(code, websocket.send_json)
         await broadcast_lobby_update(code)
