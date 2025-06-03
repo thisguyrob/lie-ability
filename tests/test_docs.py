@@ -69,7 +69,9 @@ def test_env_defaults_consistent():
     for md in iter_docs():
         for env, val in extract_envs(md.read_text()):
             if env in defaults and defaults[env] != val:
-                raise AssertionError(f"Conflicting default for {env}: {defaults[env]} vs {val} in {md}")
+                raise AssertionError(
+                    f"Conflicting default for {env}: {defaults[env]} vs {val} in {md}"
+                )
             defaults.setdefault(env, val)
 
 
@@ -84,5 +86,6 @@ def test_internal_links_resolve():
                 slug = anchor.lstrip("#")
                 if target_path not in anchor_cache:
                     anchor_cache[target_path] = collect_anchors(target_path)
-                assert slug in anchor_cache[target_path], f"Missing anchor {anchor} in {target_path}"
-
+                assert (
+                    slug in anchor_cache[target_path]
+                ), f"Missing anchor {anchor} in {target_path}"

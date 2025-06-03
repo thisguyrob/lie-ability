@@ -21,18 +21,10 @@
 ## 2 · Clone & Bootstrap
 
 ```bash
-# 1 • Clone
-$ git clone https://github.com/thisguyrob/lie-ability.git && cd lie-ability
-
-# 2 • Python venv
-$ python3 -m venv .venv && source .venv/bin/activate
-$ pip install -r backend/requirements.txt
-
-# 3 • Node packages
-$ cd frontend && npm ci && cd ..
-
-# 4 • Pre‑commit hooks (black, ruff, prettier, eslint)
-$ pre-commit install
+$ git clone https://github.com/thisguyrob/lie-ability.git
+$ cd lie-ability
+$ ./start.sh
+# then open http://localhost
 ```
 
 CI runs `black --check`, `ruff`, `mypy`, `eslint`, and `prettier --check` on every commit.
@@ -53,11 +45,7 @@ $ cd frontend && npm run dev &
 # Shared display: http://localhost:5173/shared
 ```
 
-The root convenience script picks this flow for you:
-
-```bash
-./start.sh -n    # -n = native (no Docker)
-```
+Running `./start.sh -n` performs these steps for you automatically.
 
 ---
 
