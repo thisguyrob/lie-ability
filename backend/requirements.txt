@@ -2,3 +2,4 @@ fastapi==0.112.0
 uvicorn[standard]==0.30.0
 pytest==8.2.0
 httpx
+fastapi
