@@ -40,7 +40,7 @@ Lie‑Ability is an open‑source party trivia game inspired by *Fibbage*. Up to
    ```bash
    docker compose up --build
    ```
-3. Open [http://localhost](http://localhost) (player view) and [http://localhost/shared](http://localhost/shared) (shared display).
+3. Open [http://localhost](http://localhost) (player view) and [http://localhost/host](http://localhost/host) (shared display).
 4. Scan the QR code, choose a nickname, and start lying!
 
 For full environment details see **[Dev Setup](./dev/setup.md)**.
