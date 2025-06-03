@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # scripts/prep_env.sh
 # ▸ Pre-download & install Lie-Ability dependencies for offline CI runs
-# --------------------------------------------------------------------
 set -euo pipefail
 IFS=$'\n\t'
 
@@ -38,22 +37,31 @@ deactivate
 # 2. Node.js (frontend)
 # --------------------------------------------------------------------
 NPM_CACHE_DIR="$PROJECT_ROOT/.cache/npm"
-log "Installing Node packages with offline-friendly cache at $NPM_CACHE_DIR …"
+log "Preparing Node packages with offline-friendly cache at $NPM_CACHE_DIR …"
 mkdir -p "$NPM_CACHE_DIR"
-(
-  cd frontend
-  npm config set cache "$NPM_CACHE_DIR"
+cd frontend
+
+npm config set cache "$NPM_CACHE_DIR"
+
+if [[ ! -f package-lock.json ]]; then
+  log "No package-lock.json found — running npm install to generate one"
+  npm install --no-audit --progress=false
+  log "Committing generated package-lock.json (if using git)"
+  # Uncomment next line if you want the script to auto-add it (requires git)
+  # git add package-lock.json && git commit -m "chore: add package-lock.json"
+else
   npm ci --prefer-offline --no-audit --progress=false
-)
+fi
+
+cd "$PROJECT_ROOT"
 
 # --------------------------------------------------------------------
 # 3. Optional: build frontend once so dist/ is ready for offline Docker
 # --------------------------------------------------------------------
 log "Building production frontend bundle …"
-(
-  cd frontend
-  npm run build
-)
+cd frontend
+npm run build
+cd "$PROJECT_ROOT"
 
 log "✅ Dependency preparation complete.
 Next runs can set:
