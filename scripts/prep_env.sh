@@ -44,12 +44,13 @@ cd frontend
 npm config set cache "$NPM_CACHE_DIR"
 
 if [[ ! -f package-lock.json ]]; then
-  log "No package-lock.json found — running npm install to generate one"
+  # Initial install generates lockfile for future reproducible builds
+  log "No package-lock.json found — running npm install"
   npm install --no-audit --progress=false
   log "Committing generated package-lock.json (if using git)"
-  # Uncomment next line if you want the script to auto-add it (requires git)
   # git add package-lock.json && git commit -m "chore: add package-lock.json"
 else
+  # Use lockfile for deterministic, faster installs
   npm ci --prefer-offline --no-audit --progress=false
 fi
 
