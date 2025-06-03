@@ -33,7 +33,7 @@ jobs:
     - name: Install Node deps
       run: |
         cd frontend
-        npm ci
+        npm ci --no-audit --progress=false
 
     - name: ESLint
       run: |
