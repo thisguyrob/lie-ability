@@ -1,20 +1,14 @@
-from pathlib import Path
-from flask import Blueprint, send_from_directory
+from flask import Blueprint, render_template
 
 bp = Blueprint("views", __name__)
 
-ROOT = Path(__file__).parent.parent
-MAIN_DIR = ROOT / "lie-ability-main-view"
-PLAYERS_DIR = ROOT / "lie-ability-players-view"
-
 
 @bp.route("/main/")
-@bp.route("/main/<path:filename>")
-def main(filename="index.html"):
-    return send_from_directory(MAIN_DIR, filename)
+def main():
+    return render_template("main.html")
 
 
+@bp.route("/player/")
 @bp.route("/players/")
-@bp.route("/players/<path:filename>")
-def players(filename="index.html"):
-    return send_from_directory(PLAYERS_DIR, filename)
+def players():
+    return render_template("player.html")
