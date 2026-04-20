@@ -1,0 +1,282 @@
+[
+  {
+    "category": "Science & Nature",
+    "question": "What is the only mammal capable of true, sustained flight?",
+    "answer": "Bat",
+    "lies": ["Flying squirrel", "Sugar glider", "Colugo"],
+    "group": "biology"
+  },
+  {
+    "category": "Science & Nature",
+    "question": "What is the hardest natural substance on Earth?",
+    "answer": "Diamond",
+    "lies": ["Graphene", "Corundum", "Titanium carbide"],
+    "group": "geology"
+  },
+  {
+    "category": "Science & Nature",
+    "question": "How many bones does an adult human body have?",
+    "answer": "206",
+    "lies": ["213", "198", "201"],
+    "group": "biology"
+  },
+  {
+    "category": "Science & Nature",
+    "question": "What planet is known as the Red Planet?",
+    "answer": "Mars",
+    "lies": ["Venus", "Jupiter", "Mercury"],
+    "group": "astronomy"
+  },
+  {
+    "category": "Science & Nature",
+    "question": "What gas do plants absorb from the atmosphere during photosynthesis?",
+    "answer": "Carbon dioxide",
+    "lies": ["Oxygen", "Nitrogen", "Hydrogen"],
+    "group": "biology"
+  },
+  {
+    "category": "Science & Nature",
+    "question": "What is the chemical symbol for gold?",
+    "answer": "Au",
+    "lies": ["Ag", "Gd", "Go"],
+    "group": "chemistry"
+  },
+  {
+    "category": "Science & Nature",
+    "question": "How many chromosomes do humans typically have?",
+    "answer": "46",
+    "lies": ["44", "48", "23"],
+    "group": "biology"
+  },
+  {
+    "category": "Science & Nature",
+    "question": "What is the speed of light in a vacuum (approximately)?",
+    "answer": "300,000 km/s",
+    "lies": ["150,000 km/s", "500,000 km/s", "186,000 km/s"],
+    "group": "physics"
+  },
+  {
+    "category": "Science & Nature",
+    "question": "Which planet has the most moons in our solar system?",
+    "answer": "Saturn",
+    "lies": ["Jupiter", "Uranus", "Neptune"],
+    "group": "astronomy"
+  },
+  {
+    "category": "Science & Nature",
+    "question": "What is the powerhouse of the cell?",
+    "answer": "Mitochondria",
+    "lies": ["Nucleus", "Ribosome", "Golgi apparatus"],
+    "group": "biology"
+  },
+  {
+    "category": "History",
+    "question": "In what year did World War II end?",
+    "answer": "1945",
+    "lies": ["1943", "1947", "1944"],
+    "group": "modern history"
+  },
+  {
+    "category": "History",
+    "question": "Who was the first President of the United States?",
+    "answer": "George Washington",
+    "lies": ["John Adams", "Thomas Jefferson", "Benjamin Franklin"],
+    "group": "american history"
+  },
+  {
+    "category": "History",
+    "question": "What ancient wonder was located in Alexandria, Egypt?",
+    "answer": "The Lighthouse of Alexandria",
+    "lies": ["The Library of Alexandria", "The Colossus of Alexandria", "The Temple of Serapis"],
+    "group": "ancient history"
+  },
+  {
+    "category": "History",
+    "question": "Which country was the first to grant women the right to vote nationally?",
+    "answer": "New Zealand",
+    "lies": ["Australia", "Finland", "Norway"],
+    "group": "modern history"
+  },
+  {
+    "category": "History",
+    "question": "What empire was ruled by Genghis Khan?",
+    "answer": "Mongol Empire",
+    "lies": ["Ottoman Empire", "Timurid Empire", "Liao Empire"],
+    "group": "ancient history"
+  },
+  {
+    "category": "History",
+    "question": "In what year did the Berlin Wall fall?",
+    "answer": "1989",
+    "lies": ["1991", "1987", "1993"],
+    "group": "modern history"
+  },
+  {
+    "category": "History",
+    "question": "Who was known as the 'Maid of Orléans'?",
+    "answer": "Joan of Arc",
+    "lies": ["Eleanor of Aquitaine", "Marie Curie", "Catherine de Medici"],
+    "group": "medieval history"
+  },
+  {
+    "category": "History",
+    "question": "What was the name of the ship that sank on its maiden voyage in 1912?",
+    "answer": "Titanic",
+    "lies": ["Lusitania", "Britannic", "Olympic"],
+    "group": "modern history"
+  },
+  {
+    "category": "History",
+    "question": "Which Roman emperor declared Christianity the official religion of Rome?",
+    "answer": "Theodosius I",
+    "lies": ["Constantine I", "Justinian I", "Nero"],
+    "group": "ancient history"
+  },
+  {
+    "category": "History",
+    "question": "What was the name of the first artificial Earth satellite, launched in 1957?",
+    "answer": "Sputnik",
+    "lies": ["Vostok", "Explorer", "Luna"],
+    "group": "modern history"
+  },
+  {
+    "category": "Pop Culture",
+    "question": "What fictional kingdom is the setting of Disney's 'Frozen'?",
+    "answer": "Arendelle",
+    "lies": ["Dunbroch", "Corona", "Agrabah"],
+    "group": "film"
+  },
+  {
+    "category": "Pop Culture",
+    "question": "How many Harry Potter novels did J.K. Rowling write?",
+    "answer": "7",
+    "lies": ["6", "8", "9"],
+    "group": "books"
+  },
+  {
+    "category": "Pop Culture",
+    "question": "What year was the first iPhone released?",
+    "answer": "2007",
+    "lies": ["2005", "2008", "2006"],
+    "group": "technology"
+  },
+  {
+    "category": "Pop Culture",
+    "question": "Which band released the album 'Thriller' in 1982?",
+    "answer": "Michael Jackson",
+    "lies": ["Prince", "Lionel Richie", "Quincy Jones"],
+    "group": "music"
+  },
+  {
+    "category": "Pop Culture",
+    "question": "What is the highest-grossing film of all time (not adjusted for inflation)?",
+    "answer": "Avatar",
+    "lies": ["Avengers: Endgame", "Titanic", "Top Gun: Maverick"],
+    "group": "film"
+  },
+  {
+    "category": "Pop Culture",
+    "question": "In the TV show 'Breaking Bad', what is Walter White's chemistry teacher alter ego called?",
+    "answer": "Heisenberg",
+    "lies": ["Schrödinger", "Bohr", "Fermi"],
+    "group": "television"
+  },
+  {
+    "category": "Pop Culture",
+    "question": "What app popularized the short-form vertical video format before TikTok?",
+    "answer": "Vine",
+    "lies": ["Instagram Reels", "Snapchat", "Musical.ly"],
+    "group": "technology"
+  },
+  {
+    "category": "Pop Culture",
+    "question": "What is the name of Tony Stark's AI assistant in the Iron Man films?",
+    "answer": "J.A.R.V.I.S.",
+    "lies": ["F.R.I.D.A.Y.", "E.D.I.T.H.", "P.E.P.P.E.R."],
+    "group": "film"
+  },
+  {
+    "category": "Pop Culture",
+    "question": "Which video game franchise features a character named Master Chief?",
+    "answer": "Halo",
+    "lies": ["Call of Duty", "Destiny", "Gears of War"],
+    "group": "gaming"
+  },
+  {
+    "category": "Pop Culture",
+    "question": "What is the name of the coffee shop in the TV show 'Friends'?",
+    "answer": "Central Perk",
+    "lies": ["The Grind", "Java Joe's", "Brew York"],
+    "group": "television"
+  },
+  {
+    "category": "Geography",
+    "question": "What is the capital city of Australia?",
+    "answer": "Canberra",
+    "lies": ["Sydney", "Melbourne", "Brisbane"],
+    "group": "capitals"
+  },
+  {
+    "category": "Geography",
+    "question": "What is the longest river in the world?",
+    "answer": "Nile",
+    "lies": ["Amazon", "Yangtze", "Mississippi"],
+    "group": "physical geography"
+  },
+  {
+    "category": "Geography",
+    "question": "Which country has the most natural lakes?",
+    "answer": "Canada",
+    "lies": ["Russia", "Finland", "United States"],
+    "group": "physical geography"
+  },
+  {
+    "category": "Geography",
+    "question": "What is the smallest country in the world by area?",
+    "answer": "Vatican City",
+    "lies": ["Monaco", "San Marino", "Liechtenstein"],
+    "group": "countries"
+  },
+  {
+    "category": "Geography",
+    "question": "On which continent is the Sahara Desert located?",
+    "answer": "Africa",
+    "lies": ["Asia", "South America", "Australia"],
+    "group": "physical geography"
+  },
+  {
+    "category": "Geography",
+    "question": "What is the capital of Canada?",
+    "answer": "Ottawa",
+    "lies": ["Toronto", "Montreal", "Vancouver"],
+    "group": "capitals"
+  },
+  {
+    "category": "Geography",
+    "question": "Which ocean is the largest?",
+    "answer": "Pacific Ocean",
+    "lies": ["Atlantic Ocean", "Indian Ocean", "Arctic Ocean"],
+    "group": "physical geography"
+  },
+  {
+    "category": "Geography",
+    "question": "What mountain range separates Europe from Asia?",
+    "answer": "Ural Mountains",
+    "lies": ["Caucasus Mountains", "Carpathian Mountains", "Alps"],
+    "group": "physical geography"
+  },
+  {
+    "category": "Geography",
+    "question": "What is the most populous city in the world?",
+    "answer": "Tokyo",
+    "lies": ["Shanghai", "Delhi", "Mexico City"],
+    "group": "cities"
+  },
+  {
+    "category": "Geography",
+    "question": "How many countries share a border with Brazil?",
+    "answer": "10",
+    "lies": ["9", "8", "11"],
+    "group": "countries"
+  }
+]
