@@ -1,0 +1,48 @@
+<section class="top">
+  <p class="label">Lie-Ability</p>
+  <h1 class="p-h1">Join In</h1>
+</section>
+
+<section class="stack">
+  <form id="join-form" class="panel join-form" novalidate>
+    <div class="field">
+      <label class="field-label" for="name-input">Your name</label>
+      <input id="name-input" type="text" class="name-input" placeholder="e.g. Alex" maxlength="24" autocomplete="off" />
+    </div>
+
+    <div class="field">
+      <p class="field-label">Avatar</p>
+      <div id="emoji-grid"></div>
+    </div>
+
+    <div class="field">
+      <p class="field-label">Color</p>
+      <div id="color-grid"></div>
+    </div>
+
+    <button id="join-btn" type="submit" class="cta" disabled>Join Game</button>
+    <p id="join-error" class="join-error" hidden></p>
+  </form>
+</section>
+
+<div class="emoji-modal" id="emoji-modal" hidden>
+  <div class="emoji-modal-backdrop" data-close-emoji-modal></div>
+  <div class="emoji-modal-card" role="dialog" aria-modal="true" aria-labelledby="emoji-modal-title">
+    <div class="emoji-modal-header">
+      <h2 class="emoji-modal-title" id="emoji-modal-title">Choose an emoji</h2>
+      <button class="emoji-modal-close" type="button" data-close-emoji-modal aria-label="Close emoji picker">×</button>
+    </div>
+    <div class="emoji-modal-grid"></div>
+  </div>
+</div>
+
+<div class="emoji-modal" id="color-modal" hidden>
+  <div class="emoji-modal-backdrop" data-close-color-modal></div>
+  <div class="emoji-modal-card" role="dialog" aria-modal="true" aria-labelledby="color-modal-title">
+    <div class="emoji-modal-header">
+      <h2 class="emoji-modal-title" id="color-modal-title">Choose a colour</h2>
+      <button class="emoji-modal-close" type="button" data-close-color-modal aria-label="Close colour picker">×</button>
+    </div>
+    <div class="color-modal-grid"></div>
+  </div>
+</div>

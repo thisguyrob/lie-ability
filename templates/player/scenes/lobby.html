@@ -1,0 +1,32 @@
+<section class="top">
+  <p class="label">Lie-Ability</p>
+  <h1 class="p-h1">You're in!</h1>
+</section>
+
+<section class="stack">
+  <div class="panel p-my-card" id="my-player-card">
+    <div id="player-info"></div>
+    <button type="button" id="edit-toggle-btn" class="edit-btn">Edit</button>
+  </div>
+
+  <form id="edit-form" class="panel join-form" novalidate hidden>
+    <div class="field">
+      <label class="field-label" for="edit-name">Name</label>
+      <input id="edit-name" type="text" class="name-input" maxlength="24" autocomplete="off" />
+    </div>
+    <div class="field">
+      <p class="field-label">Avatar</p>
+      <div id="edit-emoji-grid"></div>
+    </div>
+    <div class="field">
+      <p class="field-label">Color</p>
+      <div id="edit-color-grid"></div>
+    </div>
+    <button id="edit-save-btn" type="submit" class="cta">Save Changes</button>
+    <p id="edit-status" class="save-status" hidden></p>
+  </form>
+
+  <div class="panel wait-panel">
+    <p class="wait-text">Waiting for the host to start the game…</p>
+  </div>
+</section>

@@ -30,11 +30,10 @@ def start_phase_timer(game, advance_fn: Callable[[], None]) -> None:
 
     def _body():
         time.sleep(seconds)
-        from server import game_state_lock
-        with game_state_lock:
-            if game.phase_token != token:
-                return
-            advance_fn()
+        # advance_fn acquires game_state_lock internally; don't hold it here
+        if game.phase_token != token:
+            return
+        advance_fn()
 
     threading.Thread(target=_body, daemon=True).start()
 

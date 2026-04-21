@@ -55,6 +55,13 @@ def _error(msg: str, code: int = 400):
     return jsonify({"error": msg}), code
 
 
+def _stop_phase_clock(game: GameState) -> None:
+    stopped_phase = game.phase
+    game.phase_deadline = None
+    game.phase_token += 1
+    socketio.emit("timer_stop", {"phase": stopped_phase})
+
+
 def _advance_to_voting(game: GameState) -> None:
     finalize_answers(game)
     set_phase_deadline(game, "voting")
@@ -365,6 +372,7 @@ def submit_lie_route():
         submit_lie(game, player_id, text)
         done = all_lies_submitted(game)
         if done:
+            _stop_phase_clock(game)
             _advance_to_voting(game)
 
     if not done:
@@ -383,6 +391,9 @@ def vote():
     answer_id = data.get("answer_id", "")
     game = get_game()
 
+    votes_done = False
+    likes_done = False
+
     with game_state_lock:
         if game.phase != "voting":
             return _error("Not in voting phase")
@@ -400,12 +411,18 @@ def vote():
             return _error("You cannot vote for your own lie")
 
         cast_vote(game, player_id, answer_id)
-        done = all_votes_cast(game)
-        if done:
+        votes_done = all_votes_cast(game)
+        if votes_done:
             finalize_votes(game)
-            set_phase_deadline(game, "likes")
-            socketio.emit("phase_change", {"phase": "likes", "deadline_ts": game.phase_deadline.timestamp() if game.phase_deadline else None})
-            start_phase_timer(game, lambda: _force_advance_likes(game))
+            likes_done = all_likes_done(game)
+            if not likes_done:
+                set_phase_deadline(game, "likes")
+                socketio.emit("phase_change", {"phase": "likes", "deadline_ts": game.phase_deadline.timestamp() if game.phase_deadline else None})
+                start_phase_timer(game, lambda: _force_advance_likes(game))
+
+    if votes_done and likes_done:
+        _force_advance_likes(game)
+        return jsonify({"status": "voted"})
 
     _emit_state(game)
     return jsonify({"status": "voted"})
@@ -423,11 +440,15 @@ def like():
     game = get_game()
 
     with game_state_lock:
-        if game.phase != "likes":
-            return _error("Not in likes phase")
+        if game.phase not in ("voting", "likes"):
+            return _error("Not in a phase that allows likes")
         player = game.players.get(player_id)
         if not player or not player.connected:
             return _error("Player not found", 404)
+        if not player.has_voted:
+            return _error("You must vote before liking an answer")
+        if player.has_liked:
+            return _error("Already liked an answer")
 
         turn = game.current_round.current_turn
         answer = next((a for a in turn.answers if a.answer_id == answer_id), None)
@@ -441,9 +462,11 @@ def like():
         cast_like(game, player_id, answer_id)
         mark_likes_done(game, player_id)
         done = all_likes_done(game)
-        if done:
-            _force_advance_likes(game)
-            return jsonify({"status": "liked"})
+
+    # _force_advance_likes acquires game_state_lock itself, so call after releasing
+    if done:
+        _force_advance_likes(game)
+        return jsonify({"status": "liked"})
 
     _emit_state(game)
     return jsonify({"status": "liked"})

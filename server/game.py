@@ -5,6 +5,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Optional
 
+from server.embeddings import normalize_answer_text
+
 CORRECT_GUESS_BASE = 1000
 FOOLED_BASE = 500
 
@@ -509,15 +511,20 @@ def _sanitize_turn(game: GameState, turn: Turn) -> dict:
 
     elif phase == "voting":
         active = active_players(game)
-        d["answers"] = [{"answer_id": a.answer_id, "text": a.text} for a in turn.answers]
+        d["answers"] = [
+            {
+                "answer_id": a.answer_id,
+                "text": a.text,
+                "normalized_text": normalize_answer_text(a.text),
+                "author_id": a.author_id,
+            }
+            for a in turn.answers
+        ]
         d["votes_received"] = sum(1 for p in active if p.has_voted)
         d["votes_needed"] = len(active)
 
     elif phase == "likes":
-        d["answers"] = [
-            {"answer_id": a.answer_id, "text": a.text, "vote_count": a.vote_count, "likes": a.likes}
-            for a in turn.answers
-        ]
+        d["answers"] = [_answer_revealed(game, a) for a in turn.answers]
 
     elif phase in ("round_results", "appeal_vote", "game_over"):
         d["real_answer_text"] = turn.real_answer_text
@@ -535,6 +542,7 @@ def _answer_revealed(game: GameState, answer: Answer) -> dict:
     return {
         "answer_id": answer.answer_id,
         "text": answer.text,
+        "normalized_text": normalize_answer_text(answer.text),
         "author_id": answer.author_id,
         "author_name": author.name if author else None,
         "is_real": answer.is_real,

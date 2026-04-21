@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lie-Ability</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ── Reset ─────────────────────────────────────── */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    [hidden] { display: none !important; }
+
+    /* ── CSS vars ───────────────────────────────────── */
+    :root {
+      --bg: linear-gradient(135deg, #0d0f14, #151a23);
+      --panel: rgba(22, 27, 38, 0.95);
+      --ink: #e8edf5;
+      --muted: #6b7a90;
+      --accent: #39ff6a;
+      --accent-soft: rgba(57, 255, 106, 0.12);
+      --accent-hover: #2ddf58;
+      --border: rgba(57, 255, 106, 0.18);
+      --shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+      --danger: #ff3d6b;
+      --font-heading: 'Rajdhani', Impact, system-ui, sans-serif;
+      --font-body: system-ui, sans-serif;
+    }
+
+    /* ── Layout ─────────────────────────────────────── */
+    body {
+      min-height: 100vh;
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .shell {
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--panel);
+      overflow: hidden;
+    }
+
+    .stage {
+      width: min(100%, calc(100vh * 16 / 9));
+      height: 100vh;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      flex-shrink: 0;
+      container-type: size;
+      position: relative;
+    }
+
+    /* ── Scene system ───────────────────────────────── */
+    .m-scene { display: none; width: 100%; height: 100%; }
+    .m-scene.active { display: grid; width: 100%; height: 100%; }
+
+    /* ── Lobby ──────────────────────────────────────── */
+    .lobby {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(18px, 4cqi, 48px);
+      padding: clamp(18px, 4cqi, 48px);
+      min-height: 100%;
+      height: 100%;
+    }
+
+    .lobby-left {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: clamp(12px, 2cqi, 24px);
+    }
+
+    .eyebrow {
+      font: 600 clamp(0.62rem, 1.2cqi, 0.8rem)/1.2 var(--font-body);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .logo {
+      font-size: clamp(2rem, 6.2cqi, 5.5rem);
+      line-height: 0.95;
+      font-family: var(--font-heading);
+      color: var(--ink);
+    }
+
+    .qr-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: clamp(6px, 0.9cqi, 8px);
+    }
+
+    #qr-canvas canvas,
+    #qr-canvas img {
+      border-radius: clamp(8px, 1cqi, 10px);
+    }
+
+    .join-hint {
+      font: 600 clamp(0.62rem, 1.2cqi, 0.8rem)/1.2 system-ui, sans-serif;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .join-url {
+      font: 500 clamp(0.65rem, 1.35cqi, 0.85rem)/1.4 system-ui, sans-serif;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .lobby-right {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: clamp(10px, 1.4cqi, 16px);
+    }
+
+    .section-label {
+      font: 600 clamp(0.62rem, 1.2cqi, 0.8rem)/1.2 system-ui, sans-serif;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .player-list { display: flex; flex-direction: column; align-items: center; gap: clamp(8px, 1.1cqi, 12px); width: 100%; }
+
+    .m-player-card {
+      width: min(100%, clamp(180px, 28cqi, 280px));
+      min-height: clamp(36px, 4.8cqi, 48px);
+      padding: clamp(6px, 0.9cqi, 8px) clamp(12px, 1.8cqi, 18px);
+      border-radius: clamp(12px, 1.8cqi, 18px);
+      background: rgba(255,255,255,0.10);
+      display: flex;
+      align-items: center;
+      gap: clamp(10px, 1.4cqi, 16px);
+    }
+
+    .m-avatar {
+      order: 1;
+      width: clamp(28px, 4.4cqi, 44px);
+      height: clamp(28px, 4.4cqi, 44px);
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(0.9rem, 2cqi, 1.4rem);
+      flex-shrink: 0;
+      align-self: center;
+    }
+
+    .player-name {
+      order: 2;
+      flex: 1;
+      font: 600 clamp(0.85rem, 2.3cqi, 1.1rem)/1.3 system-ui, sans-serif;
+      color: var(--ink);
+      text-align: center;
+      align-self: center;
+    }
+
+    .no-players {
+      font: italic 500 clamp(0.75rem, 1.5cqi, 0.95rem)/1.5 system-ui, sans-serif;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    /* ── In-game scene layout ───────────────────────── */
+    .scene-pad {
+      padding: clamp(18px, 4cqi, 48px);
+      min-height: 100%;
+      height: 100%;
+      width: 100%;
+      display: grid;
+      align-content: start;
+      gap: clamp(14px, 2.4cqi, 28px);
+    }
+
+    .scene-pad.scene-pad-centered {
+      align-content: center;
+      justify-items: center;
+      text-align: center;
+    }
+
+    .scene-eyebrow {
+      font: 600 clamp(0.62rem, 1.2cqi, 0.8rem)/1.2 system-ui, sans-serif;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .scene-heading {
+      font-size: clamp(1.5rem, 4.5cqi, 3.5rem);
+      line-height: 1.1;
+      font-family: var(--font-heading);
+      color: var(--ink);
+    }
+
+    .scene-prompt {
+      font-size: clamp(1rem, 3.1cqi, 2rem);
+      line-height: 1.3;
+      font-family: var(--font-heading);
+      color: var(--ink);
+    }
+
+    .scene-sub {
+      font: 500 clamp(0.72rem, 1.5cqi, 0.95rem)/1.5 system-ui, sans-serif;
+      color: var(--muted);
+    }
+
+    /* ── Submission status ──────────────────────────── */
+    .submission-status-row {
+      width: min(100%, clamp(280px, 42cqi, 420px));
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      align-items: center;
+      justify-items: center;
+      gap: clamp(12px, 2cqi, 24px);
+    }
+
+    .lie-submission-status {
+      margin-top: clamp(28px, 6.4cqi, 72px);
+    }
+
+    .submission-avatar {
+      width: clamp(44px, 7cqi, 72px);
+      height: clamp(44px, 7cqi, 72px);
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(1.2rem, 3cqi, 2.2rem);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12);
+      transition: filter 0.2s, opacity 0.2s, transform 0.2s;
+    }
+
+    .submission-avatar.pending {
+      filter: grayscale(1) saturate(0.15);
+      opacity: 0.5;
+    }
+
+    /* ── Timer progress ─────────────────────────────── */
+    .timer-progress {
+      width: min(100%, clamp(240px, 42cqi, 420px));
+      height: clamp(12px, 1.4cqi, 16px);
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.10);
+      box-shadow: inset 0 0 0 1px var(--border);
+      position: relative;
+    }
+
+    .timer-progress::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 78%, white 22%) 100%);
+      transform-origin: left center;
+      animation: timer-drain 45s linear infinite;
+    }
+
+    @keyframes timer-drain {
+      from { transform: scaleX(1); }
+      to { transform: scaleX(0); }
+    }
+
+    /* ── Answer grid ────────────────────────────────── */
+    .answer-grid { display: grid; gap: clamp(10px, 1.4cqi, 14px); }
+
+    /* ── Voting layout ──────────────────────────────── */
+    .voting-layout {
+      width: min(100%, clamp(420px, 58cqi, 920px));
+      justify-self: center;
+      display: grid;
+      gap: clamp(12px, 2cqi, 22px);
+      align-content: center;
+    }
+
+    .voting-header {
+      display: grid;
+      gap: clamp(8px, 1.4cqi, 14px);
+      justify-items: center;
+      text-align: center;
+    }
+
+    .voting-spacer {
+      height: clamp(0.72rem, 1.45cqi, 0.95rem);
+    }
+
+    .voting-answer-grid {
+      --voting-columns: 2;
+      width: min(100%, clamp(300px, 42cqi, 620px));
+      justify-self: center;
+      display: grid;
+      grid-template-columns: repeat(var(--voting-columns), minmax(0, 1fr));
+      gap: clamp(8px, 1.1cqi, 12px);
+    }
+
+    .voting-layout > .timer-progress {
+      justify-self: center;
+    }
+
+    /* ── Reveal layout ──────────────────────────────── */
+    .reveal-layout {
+      width: min(100%, clamp(420px, 58cqi, 920px));
+      justify-self: center;
+      display: grid;
+      gap: clamp(12px, 2cqi, 22px);
+      align-content: center;
+    }
+
+    .reveal-answer-grid {
+      --voting-columns: 2;
+      width: min(100%, clamp(300px, 42cqi, 620px));
+      justify-self: center;
+      display: grid;
+      grid-template-columns: repeat(var(--voting-columns), minmax(0, 1fr));
+      gap: clamp(8px, 1.1cqi, 12px);
+    }
+
+    /* ── Answer cards ───────────────────────────────── */
+    .answer-card {
+      padding: clamp(12px, 1.8cqi, 20px) clamp(16px, 2.5cqi, 28px);
+      border-radius: clamp(10px, 1.5cqi, 16px);
+      border: none;
+      background: rgba(255,255,255,0.10);
+      font: 500 clamp(0.9rem, 1.9cqi, 1.15rem)/1.5 var(--font-heading);
+      color: var(--ink);
+    }
+
+    .answer-card.answer-card-compact {
+      min-height: clamp(52px, 7cqi, 76px);
+      padding: clamp(8px, 1.2cqi, 12px) clamp(12px, 1.6cqi, 16px);
+      border-radius: clamp(9px, 1.1cqi, 12px);
+      background: rgba(255,255,255,0.08);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+      font: 600 clamp(0.95rem, 1.2rem + 0.55vw, 1.45rem)/1.15 system-ui, sans-serif;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      text-wrap: balance;
+    }
+
+    .answer-card.real {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .answer-meta {
+      font: 500 clamp(0.65rem, 1.3cqi, 0.85rem)/1.4 system-ui, sans-serif;
+      color: var(--muted);
+      margin-top: clamp(4px, 0.6cqi, 6px);
+    }
+
+    .reveal-summary-card.is-inactive {
+      opacity: 0.55;
+      filter: saturate(0.72);
+    }
+
+    .reveal-summary-card.is-truth {
+      background: rgba(255,255,255,0.08);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+    }
+
+    /* ── Round results score rows ───────────────────── */
+    .score-list { display: grid; gap: clamp(8px, 1.1cqi, 12px); }
+
+    .m-scene[data-scene="round_results"] .scene-pad {
+      grid-template-rows: auto auto auto minmax(0, 1fr);
+      gap: clamp(10px, 1.8cqi, 22px);
+    }
+
+    .m-scene[data-scene="round_results"] .score-list {
+      min-height: 0;
+      height: 100%;
+      align-content: stretch;
+      grid-auto-rows: minmax(0, 1fr);
+    }
+
+    .score-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: clamp(14px, 2cqi, 24px);
+      padding: clamp(12px, 1.8cqi, 18px) clamp(16px, 2.2cqi, 24px);
+      border-radius: clamp(10px, 1.4cqi, 14px);
+      border: none;
+      background: color-mix(in srgb, var(--player-color, rgba(255,255,255,0.10)) 30%, rgba(18, 24, 36, 0.82) 70%);
+      font: 600 clamp(0.8rem, 1.7cqi, 1rem)/1.3 system-ui, sans-serif;
+      color: var(--ink);
+    }
+
+    .m-scene[data-scene="round_results"] .score-row {
+      min-height: 0;
+      height: 100%;
+      padding: clamp(10px, 1.35cqi, 16px) clamp(14px, 1.9cqi, 22px);
+    }
+
+    .score-player {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: clamp(12px, 1.6cqi, 18px);
+      flex: 1;
+    }
+
+    .score-player-id {
+      display: flex;
+      align-items: center;
+      gap: clamp(10px, 1.4cqi, 14px);
+      flex-shrink: 0;
+    }
+
+    .score-player-avatar {
+      width: clamp(36px, 4.8cqi, 44px);
+      height: clamp(36px, 4.8cqi, 44px);
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(1rem, 1.8cqi, 1.3rem);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.14);
+      flex-shrink: 0;
+    }
+
+    .score-player-name {
+      font: inherit;
+      color: var(--ink);
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .score-meta {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: clamp(12px, 1.6cqi, 18px);
+      justify-content: flex-start;
+      flex: 0 1 auto;
+    }
+
+    .score-like-slot {
+      width: clamp(56px, 8cqi, 76px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .score-like-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font: 700 clamp(0.78rem, 1.4cqi, 0.92rem)/1 system-ui, sans-serif;
+      color: color-mix(in srgb, var(--ink) 90%, white 10%);
+      white-space: nowrap;
+    }
+
+    .score-like-heart { font-size: 0.95em; line-height: 1; }
+
+    .score-player-lie-card {
+      min-width: 0;
+      display: inline-flex;
+      align-items: center;
+      max-width: min(100%, clamp(180px, 28cqi, 320px));
+      padding: clamp(8px, 1.1cqi, 11px) clamp(12px, 1.6cqi, 16px);
+      border-radius: clamp(8px, 1cqi, 10px);
+      background: rgba(13, 18, 29, 0.55);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+    }
+
+    .score-player-lie {
+      font: 600 clamp(0.8rem, 1.45cqi, 0.96rem)/1.2 system-ui, sans-serif;
+      color: color-mix(in srgb, var(--ink) 82%, white 18%);
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .score-delta {
+      font: 700 clamp(0.9rem, 1.8cqi, 1.1rem)/1 system-ui, sans-serif;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .score-total {
+      min-width: clamp(72px, 10cqi, 96px);
+      display: grid;
+      gap: 4px;
+      justify-items: end;
+      flex-shrink: 0;
+      text-align: right;
+    }
+
+    .score-total-label {
+      font: 600 clamp(0.64rem, 1.1cqi, 0.76rem)/1 system-ui, sans-serif;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: color-mix(in srgb, var(--ink) 56%, transparent 44%);
+      white-space: nowrap;
+    }
+
+    .score-total-value {
+      font: 800 clamp(1rem, 2cqi, 1.22rem)/1 var(--font-heading);
+      color: var(--ink);
+      white-space: nowrap;
+    }
+
+    /* ── Game over ──────────────────────────────────── */
+    .m-scene[data-scene="game_over"] .scene-pad {
+      grid-template-rows: auto auto minmax(0, 1fr);
+    }
+
+    .game-over-grid {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1.75fr) minmax(240px, 0.95fr);
+      gap: clamp(16px, 2.2cqi, 24px);
+      align-items: stretch;
+      overflow: hidden;
+    }
+
+    .game-over-panel {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: clamp(10px, 1.5cqi, 16px);
+      padding: clamp(12px, 1.8cqi, 22px);
+      border-radius: clamp(14px, 1.8cqi, 20px);
+      background: rgba(255,255,255,0.05);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+      overflow: hidden;
+    }
+
+    .game-over-panel-primary .score-list,
+    .game-over-panel-secondary .score-list {
+      min-height: 0;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: clamp(8px, 1.1cqi, 12px);
+      align-content: stretch;
+    }
+
+    .game-over-panel-secondary {
+      background: linear-gradient(180deg, color-mix(in srgb, var(--accent-soft) 40%, rgba(255,255,255,0.02) 60%), rgba(255,255,255,0.04));
+    }
+
+    .game-over-panel-title {
+      font: 700 clamp(0.96rem, 2cqi, 1.3rem)/1.1 var(--font-heading);
+      color: var(--ink);
+    }
+
+    .game-over-panel-subtitle {
+      font: 600 clamp(0.62rem, 1.15cqi, 0.76rem)/1.2 system-ui, sans-serif;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .game-over-score-row {
+      min-height: 0;
+      flex: 1 1 0;
+      padding: clamp(10px, 1.35cqi, 16px) clamp(14px, 1.8cqi, 20px);
+    }
+
+    .game-over-score-name {
+      font: 700 clamp(1rem, 2cqi, 1.22rem)/1.2 system-ui, sans-serif;
+      color: var(--ink);
+    }
+
+    .game-over-score-row.rank-1 { background: linear-gradient(180deg, rgba(255,214,90,0.16), rgba(255,214,90,0.09)); box-shadow: inset 0 0 0 1px rgba(255,214,90,0.18); }
+    .game-over-score-row.rank-2 { background: linear-gradient(180deg, rgba(198,206,221,0.14), rgba(198,206,221,0.08)); box-shadow: inset 0 0 0 1px rgba(198,206,221,0.16); }
+    .game-over-score-row.rank-3 { background: linear-gradient(180deg, rgba(205,127,50,0.16), rgba(205,127,50,0.08)); box-shadow: inset 0 0 0 1px rgba(205,127,50,0.18); }
+    .game-over-score-row.rank-1 .game-over-score-name, .game-over-score-row.rank-1 .score-delta { color: #ffd65a; }
+    .game-over-score-row.rank-2 .game-over-score-name, .game-over-score-row.rank-2 .score-delta { color: #d9deea; }
+    .game-over-score-row.rank-3 .game-over-score-name, .game-over-score-row.rank-3 .score-delta { color: #d79a62; }
+
+    .game-over-like-row {
+      min-height: 0;
+      flex: 1 1 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: clamp(12px, 1.6cqi, 18px);
+      padding: clamp(10px, 1.35cqi, 16px) clamp(12px, 1.55cqi, 18px);
+    }
+
+    .game-over-like-player { display: flex; align-items: center; min-width: 0; flex: 1; }
+
+    .game-over-like-copy { min-width: 0; display: grid; gap: 4px; }
+
+    .game-over-like-name {
+      font: 700 clamp(0.96rem, 1.8cqi, 1.1rem)/1.15 system-ui, sans-serif;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .game-over-like-rank {
+      font: 600 clamp(0.64rem, 1.15cqi, 0.76rem)/1.2 system-ui, sans-serif;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .game-over-like-total {
+      display: grid;
+      gap: 4px;
+      justify-items: end;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .game-over-like-total-label {
+      font: 600 clamp(0.62rem, 1.05cqi, 0.74rem)/1.2 system-ui, sans-serif;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: color-mix(in srgb, var(--ink) 56%, transparent 44%);
+      white-space: nowrap;
+    }
+
+    .game-over-like-total-value {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font: 800 clamp(0.98rem, 1.9cqi, 1.18rem)/1 var(--font-heading);
+      color: var(--ink);
+      white-space: nowrap;
+    }
+
+    /* ── Reveal animations ──────────────────────────── */
+    @keyframes revealCard {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes revealHeader {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .reveal-layout .voting-header {
+      opacity: 0;
+      animation: revealHeader 0.42s ease forwards;
+    }
+
+    .reveal-card {
+      opacity: 0;
+      animation: revealCard 0.6s ease forwards;
+    }
+
+    .reveal-card.is-truth {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .reveal-voters {
+      font: 600 clamp(0.65rem, 1.3cqi, 0.9rem)/1.4 system-ui, sans-serif;
+      color: var(--ink);
+      margin-top: clamp(4px, 0.6cqi, 6px);
+    }
+
+    /* ── Reveal overlay / spotlight ─────────────────── */
+    .reveal-scene { position: relative; isolation: isolate; }
+
+    .reveal-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 8;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.22s ease;
+    }
+
+    .reveal-overlay.is-active { opacity: 1; }
+
+    .reveal-overlay-backdrop {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 50% 42%, rgba(255,255,255,0.07), transparent 34%),
+        rgba(8, 11, 16, 0.84);
+      backdrop-filter: blur(5px);
+    }
+
+    .reveal-spotlight-card {
+      position: absolute;
+      display: grid;
+      gap: clamp(14px, 2.2cqi, 22px);
+      width: calc(100% - (2 * clamp(18px, 4cqi, 48px)));
+      max-width: clamp(420px, 74cqi, 980px);
+      max-height: calc(100% - (2 * clamp(18px, 4cqi, 48px)));
+      padding: clamp(18px, 3.2cqi, 30px);
+      align-content: start;
+      overflow: auto;
+      background: linear-gradient(180deg, rgba(255,255,255,0.15), rgba(255,255,255,0.08));
+      box-shadow:
+        0 32px 90px rgba(0, 0, 0, 0.45),
+        inset 0 0 0 1px rgba(255,255,255,0.06);
+      opacity: 0;
+      transition:
+        top 0.62s cubic-bezier(0.2, 0.9, 0.24, 1),
+        left 0.62s cubic-bezier(0.2, 0.9, 0.24, 1),
+        width 0.62s cubic-bezier(0.2, 0.9, 0.24, 1),
+        height 0.62s cubic-bezier(0.2, 0.9, 0.24, 1),
+        transform 0.62s cubic-bezier(0.2, 0.9, 0.24, 1),
+        opacity 0.25s ease;
+      transform: translate(-50%, -50%);
+    }
+
+    .reveal-spotlight-card.is-live { opacity: 1; }
+
+    .reveal-spotlight-card.is-truth {
+      background:
+        linear-gradient(180deg, color-mix(in srgb, var(--accent-soft) 76%, white 6%), color-mix(in srgb, var(--accent-soft) 92%, black 8%));
+      box-shadow:
+        0 34px 96px rgba(0, 0, 0, 0.48),
+        inset 0 0 0 1px color-mix(in srgb, var(--accent) 28%, white 0%);
+    }
+
+    .reveal-spotlight-head { display: grid; gap: clamp(4px, 0.9cqi, 10px); }
+
+    .reveal-spotlight-title {
+      font: 700 clamp(1.4rem, 3.6cqi, 2.6rem)/1.02 var(--font-heading);
+      color: var(--ink);
+      text-wrap: balance;
+    }
+
+    .reveal-spotlight-subtitle {
+      font: 600 clamp(0.82rem, 1.5cqi, 1rem)/1.2 system-ui, sans-serif;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .reveal-overlay-note {
+      font: 500 clamp(0.9rem, 1.8cqi, 1.08rem)/1.5 system-ui, sans-serif;
+      color: var(--ink);
+      opacity: 0.92;
+    }
+
+    .reveal-avatar-stage { display: grid; gap: clamp(10px, 1.6cqi, 16px); align-content: start; min-height: 0; }
+
+    .reveal-avatar-label {
+      font: 600 clamp(0.68rem, 1.3cqi, 0.88rem)/1.2 system-ui, sans-serif;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .reveal-avatar-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: clamp(10px, 1.6cqi, 16px);
+      min-height: clamp(52px, 7.8cqi, 88px);
+      align-items: center;
+    }
+
+    .reveal-avatar-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: clamp(10px, 1.5cqi, 14px);
+      padding: clamp(8px, 1.4cqi, 12px) clamp(10px, 1.7cqi, 16px);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+      opacity: 0;
+      transform: translateY(10px) scale(0.96);
+      transition: opacity 0.25s ease, transform 0.32s ease;
+    }
+
+    .reveal-avatar-chip.is-visible { opacity: 1; transform: translateY(0) scale(1); }
+
+    .reveal-avatar {
+      width: clamp(40px, 5.6cqi, 54px);
+      height: clamp(40px, 5.6cqi, 54px);
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(1.05rem, 2.4cqi, 1.5rem);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.16);
+      flex-shrink: 0;
+    }
+
+    .reveal-avatar-name {
+      font: 700 clamp(0.92rem, 1.6cqi, 1.05rem)/1.15 system-ui, sans-serif;
+      color: var(--ink);
+    }
+
+    .reveal-final-banner {
+      display: grid;
+      gap: clamp(8px, 1.4cqi, 12px);
+      padding-top: clamp(2px, 0.4cqi, 6px);
+      min-height: clamp(56px, 8.4cqi, 94px);
+    }
+
+    .reveal-final-banner[hidden] { display: none; }
+
+    .reveal-final-kicker {
+      font: 600 clamp(0.68rem, 1.3cqi, 0.86rem)/1.2 system-ui, sans-serif;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .reveal-final-truth {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: fit-content;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--accent-soft) 88%, white 4%);
+      color: var(--ink);
+      font: 800 clamp(0.88rem, 1.8cqi, 1.1rem)/1 var(--font-heading);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="stage">
+
+      <!-- Lobby -->
+      <div class="m-scene active" data-scene="lobby">
+        {% include "main/scenes/lobby.html" %}
+      </div>
+
+      <!-- Category Pick -->
+      <div class="m-scene" data-scene="category_pick">
+        <div class="scene-pad scene-pad-centered">
+          <h2 class="scene-heading" id="cp-active-player"></h2>
+          <p class="scene-sub">is choosing a category…</p>
+          <div class="timer-progress" role="progressbar" aria-label="Category pick timer"></div>
+        </div>
+      </div>
+
+      <!-- Lie Submission -->
+      <div class="m-scene" data-scene="lie_submission">
+        <div class="scene-pad scene-pad-centered">
+          <p class="scene-eyebrow" id="ls-category"></p>
+          <h2 class="scene-prompt" id="ls-prompt"></h2>
+          <div class="submission-status-row lie-submission-status" id="ls-status-row"></div>
+          <div class="timer-progress" role="progressbar" aria-label="Lie submission timer"></div>
+        </div>
+      </div>
+
+      <!-- Voting -->
+      <div class="m-scene" data-scene="voting">
+        <div class="scene-pad scene-pad-centered">
+          <div class="voting-layout">
+            <div class="voting-header">
+              <p class="scene-eyebrow" id="v-category"></p>
+              <h2 class="scene-prompt" id="v-prompt"></h2>
+              <div class="voting-spacer" aria-hidden="true"></div>
+            </div>
+            <div class="answer-grid voting-answer-grid" id="voting-answers"></div>
+            <div class="timer-progress" role="progressbar" aria-label="Voting timer"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Likes / Reveal -->
+      <div class="m-scene reveal-scene" data-scene="likes">
+        <div class="scene-pad scene-pad-centered">
+          <div class="reveal-layout">
+            <div class="voting-header">
+              <p class="scene-eyebrow" id="rv-category"></p>
+              <h2 class="scene-prompt" id="rv-prompt"></h2>
+              <div class="voting-spacer" aria-hidden="true"></div>
+            </div>
+            <div class="answer-grid reveal-answer-grid" id="likes-answers"></div>
+          </div>
+        </div>
+        <div class="reveal-overlay" aria-hidden="true">
+          <div class="reveal-overlay-backdrop"></div>
+          <article class="answer-card reveal-spotlight-card" id="reveal-spotlight-card">
+            <div class="reveal-spotlight-head">
+              <p class="reveal-spotlight-title" id="reveal-spotlight-title"></p>
+              <p class="reveal-spotlight-subtitle" id="reveal-spotlight-subtitle"></p>
+            </div>
+            <p class="reveal-overlay-note" id="reveal-overlay-note"></p>
+            <div class="reveal-avatar-stage">
+              <p class="reveal-avatar-label" id="reveal-avatar-label"></p>
+              <div class="reveal-avatar-row" id="reveal-avatar-row"></div>
+            </div>
+            <div class="reveal-final-banner" id="reveal-final-banner" hidden>
+              <p class="reveal-final-kicker" id="reveal-final-kicker"></p>
+              <div id="reveal-final-content"></div>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <!-- Round Results -->
+      <div class="m-scene" data-scene="round_results">
+        <div class="scene-pad">
+          <p class="scene-eyebrow">Results</p>
+          <h2 class="scene-heading">The answer was…</h2>
+          <div class="answer-card real" id="rr-real-answer"></div>
+          <div class="score-list" id="rr-score-changes"></div>
+        </div>
+      </div>
+
+      <!-- Game Over -->
+      <div class="m-scene" data-scene="game_over">
+        <div class="scene-pad">
+          <p class="scene-eyebrow">Game Over</p>
+          <h2 class="scene-heading">Final Scores</h2>
+          <div class="game-over-grid">
+            <section class="game-over-panel game-over-panel-primary">
+              <div>
+                <p class="game-over-panel-subtitle">Scoreboard</p>
+                <h3 class="game-over-panel-title">Player Scores</h3>
+              </div>
+              <div class="score-list" id="go-scores"></div>
+            </section>
+            <section class="game-over-panel game-over-panel-secondary">
+              <div>
+                <p class="game-over-panel-subtitle">Audience Favorite</p>
+                <h3 class="game-over-panel-title">Most Total Likes</h3>
+              </div>
+              <div class="score-list" id="go-likes"></div>
+            </section>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- .stage -->
+  </main>
+
+  <script src="/static/socket.io.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script>
+    const playerUrl = 'http://{{ local_ip }}:6767/player';
+    document.getElementById('qr-url-label').textContent = '{{ local_ip }}:6767/player';
+    new QRCode(document.getElementById('qr-canvas'), {
+      text: playerUrl,
+      width: 180,
+      height: 180,
+      colorDark: '#e8edf5',
+      colorLight: '#0d0f14',
+    });
+
+    const socket = io();
+    let phaseClockDeadlineTs = null;
+    let phaseClockTimerId = null;
+
+    function stopPhaseClock() {
+      phaseClockDeadlineTs = null;
+      if (phaseClockTimerId !== null) {
+        clearTimeout(phaseClockTimerId);
+        phaseClockTimerId = null;
+      }
+    }
+
+    function syncPhaseClock(deadlineTs) {
+      stopPhaseClock();
+      if (deadlineTs == null) return;
+      phaseClockDeadlineTs = deadlineTs;
+      const tick = () => {
+        if (phaseClockDeadlineTs == null) return;
+        const remaining = Math.max(0, Math.ceil(phaseClockDeadlineTs - (Date.now() / 1000)));
+        if (remaining === 0) { stopPhaseClock(); return; }
+        phaseClockTimerId = setTimeout(tick, 250);
+      };
+      tick();
+    }
+
+    socket.on('game_state', renderScene);
+    socket.on('game_state', (state) => {
+      syncPhaseClock(state.phase_deadline_ts ?? null);
+    });
+    socket.on('phase_change', ({deadline_ts}) => {
+      _likesRendered = false;
+      stopRevealSequence();
+      syncPhaseClock(deadline_ts ?? null);
+    });
+    socket.on('timer_stop', () => {
+      stopPhaseClock();
+    });
+
+    // ── Scene switching ───────────────────────────────
+    function renderScene(state) {
+      document.querySelectorAll('.m-scene').forEach(s => s.classList.remove('active'));
+      const el = document.querySelector('.m-scene[data-scene="' + state.phase + '"]');
+      if (el) el.classList.add('active');
+      switch (state.phase) {
+        case 'lobby':          renderLobby(state); break;
+        case 'category_pick':  renderCategoryPick(state); break;
+        case 'lie_submission': renderLieSubmission(state); break;
+        case 'voting':         renderVoting(state); break;
+        case 'likes':          renderLikes(state); break;
+        case 'round_results':  renderRoundResults(state); break;
+        case 'game_over':      renderGameOver(state); break;
+      }
+    }
+
+    // ── Render functions ──────────────────────────────
+    function renderLobby(state) {
+      const players = state.players || [];
+      document.getElementById('player-count').textContent = players.length;
+      const list = document.getElementById('player-list');
+      if (players.length === 0) {
+        list.innerHTML = '<p class="no-players">No players yet — scan the QR code to join.</p>';
+        return;
+      }
+      list.innerHTML = players.map(p => `
+        <div class="m-player-card">
+          <span class="player-name">${escHtml(p.name)}</span>
+          <span class="m-avatar" style="background:${p.avatar_bg_color}">${p.avatar_emoji}</span>
+        </div>
+      `).join('');
+    }
+
+    function renderCategoryPick(state) {
+      const p = state.players.find(pl => pl.player_id === state.active_player_id);
+      document.getElementById('cp-active-player').textContent = p ? p.name : '…';
+    }
+
+    function renderLieSubmission(state) {
+      const t = state.current_turn;
+      if (!t) return;
+      document.getElementById('ls-category').textContent = t.category_name || '';
+      document.getElementById('ls-prompt').textContent = t.question_prompt;
+      const submitted = t.submissions_received || 0;
+      const row = document.getElementById('ls-status-row');
+      row.innerHTML = (state.players || []).map((p, i) =>
+        `<span class="submission-avatar${i < submitted ? '' : ' pending'}" style="background:${p.avatar_bg_color}">${p.avatar_emoji}</span>`
+      ).join('');
+      // Adjust grid columns for player count
+      const count = (state.players || []).length;
+      row.style.gridTemplateColumns = `repeat(${Math.min(count, 4)}, 1fr)`;
+    }
+
+    function renderVoting(state) {
+      const t = state.current_turn;
+      if (!t) return;
+      document.getElementById('v-category').textContent = t.category_name || '';
+      document.getElementById('v-prompt').textContent = t.question_prompt;
+      document.getElementById('voting-answers').innerHTML = t.answers.map(a =>
+        `<div class="answer-card answer-card-compact" data-answer-id="${a.answer_id}">${escHtml(a.normalized_text || a.text)}</div>`
+      ).join('');
+      updateVotingLayouts();
+    }
+
+    function updateVotingLayouts() {
+      document.querySelectorAll('.voting-answer-grid, .reveal-answer-grid').forEach(grid => {
+        const count = grid.children.length;
+        let columns = count <= 2 ? 2 : count <= 6 ? 2 : Math.ceil(Math.sqrt(count));
+        grid.style.setProperty('--voting-columns', String(columns));
+      });
+    }
+
+    // ── Likes / Reveal sequence ───────────────────────
+    let _likesRendered = false;
+    let revealSequenceToken = 0;
+
+    function renderLikes(state) {
+      if (_likesRendered) return;
+      _likesRendered = true;
+
+      const t = state.current_turn;
+      if (!t) return;
+
+      document.getElementById('rv-category').textContent = t.category_name || '';
+      document.getElementById('rv-prompt').textContent = t.question_prompt;
+
+      const answers = t.answers || [];
+      const voted = answers.filter(a => !a.is_real && a.vote_count > 0)
+        .sort((a, b) => a.vote_count - b.vote_count);
+      const truth = answers.find(a => a.is_real);
+      const order = truth ? [...voted, truth] : voted;
+
+      const grid = document.getElementById('likes-answers');
+      grid.innerHTML = order.map((a, i) =>
+        `<div class="answer-card answer-card-compact reveal-card reveal-summary-card"
+              data-answer-id="${a.answer_id}"
+              style="animation-delay:${(i * 0.1).toFixed(1)}s">${escHtml(a.normalized_text || a.text)}</div>`
+      ).join('');
+      updateVotingLayouts();
+
+      const sceneEl = document.querySelector('.m-scene[data-scene="likes"]');
+      if (sceneEl) startRevealSequence(sceneEl, order, state.players || []);
+    }
+
+    function stopRevealSequence() {
+      revealSequenceToken += 1;
+      const overlay = document.querySelector('.reveal-overlay');
+      const spotlightCard = document.getElementById('reveal-spotlight-card');
+      const avatarRow = document.getElementById('reveal-avatar-row');
+      const finalBanner = document.getElementById('reveal-final-banner');
+      const finalContent = document.getElementById('reveal-final-content');
+      if (overlay) overlay.classList.remove('is-active');
+      if (spotlightCard) {
+        spotlightCard.classList.remove('is-live', 'is-truth');
+        spotlightCard.style.top = '';
+        spotlightCard.style.left = '';
+        spotlightCard.style.width = '';
+        spotlightCard.style.height = '';
+      }
+      if (avatarRow) avatarRow.innerHTML = '';
+      if (finalContent) finalContent.innerHTML = '';
+      if (finalBanner) finalBanner.hidden = true;
+    }
+
+    function startRevealSequence(sceneEl, order, players) {
+      stopRevealSequence();
+      const token = revealSequenceToken;
+      runRevealSequence(sceneEl, order, players, token);
+    }
+
+    function isRevealSequenceCurrent(token) {
+      return _likesRendered && token === revealSequenceToken;
+    }
+
+    async function runRevealSequence(sceneEl, order, players, token) {
+      await sleep(1150);
+      while (isRevealSequenceCurrent(token)) {
+        for (const item of order) {
+          await runRevealStep(sceneEl, item, players, token);
+          if (!isRevealSequenceCurrent(token)) return;
+          await sleep(450);
+        }
+        if (!isRevealSequenceCurrent(token)) return;
+        await sleep(1000);
+      }
+    }
+
+    function getRevealExpandedMetrics(sceneEl) {
+      const sceneRect = sceneEl.getBoundingClientRect();
+      const inset = Math.min(48, sceneRect.width * 0.04, sceneRect.height * 0.04);
+      return {
+        sceneRect,
+        targetWidth: Math.min(sceneRect.width - (inset * 2), 920),
+        maxHeight: Math.max(240, sceneRect.height - (inset * 2)),
+      };
+    }
+
+    function measureRevealExpandedHeight(spotlightCard, targetWidth, maxHeight) {
+      const prevWidth = spotlightCard.style.width;
+      const prevHeight = spotlightCard.style.height;
+      spotlightCard.style.width = `${targetWidth}px`;
+      spotlightCard.style.height = 'auto';
+      const measuredHeight = Math.min(Math.max(spotlightCard.scrollHeight, 220), maxHeight);
+      spotlightCard.style.width = prevWidth;
+      spotlightCard.style.height = prevHeight;
+      return measuredHeight;
+    }
+
+    function resizeRevealSpotlight(sceneEl, spotlightCard) {
+      const { sceneRect, targetWidth, maxHeight } = getRevealExpandedMetrics(sceneEl);
+      const targetHeight = measureRevealExpandedHeight(spotlightCard, targetWidth, maxHeight);
+      spotlightCard.style.top = `${sceneRect.height / 2}px`;
+      spotlightCard.style.left = `${sceneRect.width / 2}px`;
+      spotlightCard.style.width = `${targetWidth}px`;
+      spotlightCard.style.height = `${targetHeight}px`;
+    }
+
+    function findPlayerByName(players, name) {
+      return players.find(p => p.name === name);
+    }
+
+    async function runRevealStep(sceneEl, item, players, token) {
+      const sourceCard = sceneEl.querySelector(`[data-answer-id="${item.answer_id}"]`);
+      const overlay = sceneEl.querySelector('.reveal-overlay');
+      const spotlightCard = document.getElementById('reveal-spotlight-card');
+      const titleEl = document.getElementById('reveal-spotlight-title');
+      const subtitleEl = document.getElementById('reveal-spotlight-subtitle');
+      const noteEl = document.getElementById('reveal-overlay-note');
+      const avatarLabelEl = document.getElementById('reveal-avatar-label');
+      const avatarRow = document.getElementById('reveal-avatar-row');
+      const finalBanner = document.getElementById('reveal-final-banner');
+      const finalKicker = document.getElementById('reveal-final-kicker');
+      const finalContent = document.getElementById('reveal-final-content');
+
+      if (!sourceCard || !overlay || !spotlightCard) return;
+
+      const sceneRect = sceneEl.getBoundingClientRect();
+      const sourceRect = sourceCard.getBoundingClientRect();
+      const sourceCenterX = sourceRect.left - sceneRect.left + sourceRect.width / 2;
+      const sourceCenterY = sourceRect.top - sceneRect.top + sourceRect.height / 2;
+
+      const voterNames = item.voted_by_names || [];
+      const answerText = item.normalized_text || item.text;
+      const authorLabel = item.is_real ? 'The Truth' : item.author_name ? `${item.author_name}'s lie` : 'Bot lie';
+
+      spotlightCard.classList.toggle('is-truth', !!item.is_real);
+      titleEl.textContent = answerText;
+      subtitleEl.textContent = authorLabel;
+      noteEl.textContent = item.vote_count === 1 ? '1 vote is being revealed.' : `${item.vote_count} votes are being revealed.`;
+      avatarLabelEl.textContent = voterNames.length === 1 ? 'Voter revealed' : 'Voters revealed';
+      avatarRow.innerHTML = '';
+      finalContent.innerHTML = '';
+      finalBanner.hidden = true;
+
+      spotlightCard.style.top = `${sourceCenterY}px`;
+      spotlightCard.style.left = `${sourceCenterX}px`;
+      spotlightCard.style.width = `${sourceRect.width}px`;
+      spotlightCard.style.height = `${sourceRect.height}px`;
+      spotlightCard.classList.remove('is-live');
+      overlay.classList.add('is-active');
+
+      void spotlightCard.offsetWidth;
+      spotlightCard.classList.add('is-live');
+      resizeRevealSpotlight(sceneEl, spotlightCard);
+
+      await sleep(700);
+      if (!isRevealSequenceCurrent(token)) return;
+
+      for (const name of voterNames) {
+        const player = findPlayerByName(players, name);
+        const chip = makeRevealAvatarChip({
+          name,
+          emoji: player ? player.avatar_emoji : '❓',
+          color: player ? player.avatar_bg_color : '#555',
+        });
+        avatarRow.appendChild(chip);
+        requestAnimationFrame(() => chip.classList.add('is-visible'));
+        noteEl.textContent = `${name} voted for this.`;
+        resizeRevealSpotlight(sceneEl, spotlightCard);
+        await sleep(550);
+        if (!isRevealSequenceCurrent(token)) return;
+      }
+
+      await sleep(250);
+      if (!isRevealSequenceCurrent(token)) return;
+
+      finalBanner.hidden = false;
+      if (item.is_real) {
+        finalKicker.textContent = 'Final reveal';
+        finalContent.innerHTML = '<div class="reveal-final-truth">This was the truth</div>';
+        noteEl.textContent = 'Now the real answer is revealed.';
+      } else if (item.author_name) {
+        finalKicker.textContent = 'Submitted by';
+        const author = findPlayerByName(players, item.author_name);
+        const submitterChip = makeRevealAvatarChip({
+          name: item.author_name,
+          emoji: author ? author.avatar_emoji : '❓',
+          color: author ? author.avatar_bg_color : '#555',
+        });
+        finalContent.replaceChildren(submitterChip);
+        requestAnimationFrame(() => submitterChip.classList.add('is-visible'));
+        noteEl.textContent = `${item.author_name} submitted this lie.`;
+      }
+      resizeRevealSpotlight(sceneEl, spotlightCard);
+
+      await sleep(950);
+      if (!isRevealSequenceCurrent(token)) return;
+
+      spotlightCard.style.top = `${sourceCenterY}px`;
+      spotlightCard.style.left = `${sourceCenterX}px`;
+      spotlightCard.style.width = `${sourceRect.width}px`;
+      spotlightCard.style.height = `${sourceRect.height}px`;
+
+      await sleep(640);
+      if (!isRevealSequenceCurrent(token)) return;
+
+      overlay.classList.remove('is-active');
+      spotlightCard.classList.remove('is-live');
+      avatarRow.innerHTML = '';
+      finalContent.innerHTML = '';
+      finalBanner.hidden = true;
+    }
+
+    function makeRevealAvatarChip({ name, emoji, color }) {
+      const chip = document.createElement('div');
+      chip.className = 'reveal-avatar-chip';
+      chip.innerHTML = `
+        <span class="reveal-avatar" style="background:${color}">${emoji}</span>
+        <span class="reveal-avatar-name">${escHtml(name)}</span>
+      `;
+      return chip;
+    }
+
+    // ── Round Results ─────────────────────────────────
+    function renderRoundResults(state) {
+      const t = state.current_turn;
+      if (!t) return;
+      document.getElementById('rr-real-answer').textContent = t.real_answer_text;
+      const answers = t.answers || [];
+      document.getElementById('rr-score-changes').innerHTML = (state.players || []).map(p => {
+        const ans = answers.find(a => a.author_id === p.player_id && !a.is_real);
+        const lieText = ans ? (ans.normalized_text || ans.text) : '';
+        const likes = ans ? (ans.likes || 0) : 0;
+        return `<div class="score-row" style="--player-color:${p.avatar_bg_color}">
+          <div class="score-player">
+            <div class="score-player-id">
+              <span class="score-player-avatar" style="background:${p.avatar_bg_color}">${p.avatar_emoji}</span>
+              <span class="score-player-name">${escHtml(p.name)}</span>
+            </div>
+            <div class="score-meta">
+              ${lieText ? `<span class="score-player-lie-card"><span class="score-player-lie">${escHtml(lieText)}</span></span>` : ''}
+              <span class="score-like-slot">${likes > 0 ? `<span class="score-like-count"><span class="score-like-heart">❤️</span><span>x${likes}</span></span>` : ''}</span>
+            </div>
+          </div>
+          <div class="score-total">
+            <span class="score-total-label">Total Points</span>
+            <span class="score-total-value">${p.score}</span>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    // ── Game Over ─────────────────────────────────────
+    function renderGameOver(state) {
+      const scores = state.final_scores || [];
+      document.getElementById('go-scores').innerHTML = scores.map((p, i) =>
+        `<div class="score-row game-over-score-row${i < 3 ? ' rank-' + (i + 1) : ''}">
+          <span class="game-over-score-name">${i + 1}. ${escHtml(p.name)}</span>
+          <span class="score-delta">${p.score}</span>
+        </div>`
+      ).join('');
+      const byLikes = [...scores].sort((a, b) => (b.likes_received || 0) - (a.likes_received || 0));
+      const rankLabels = ['1st place', '2nd place', '3rd place'];
+      document.getElementById('go-likes').innerHTML = byLikes.map((p, i) =>
+        `<div class="score-row game-over-like-row" style="--player-color:${p.avatar_bg_color}">
+          <div class="game-over-like-player">
+            <div class="game-over-like-copy">
+              <span class="game-over-like-name">${escHtml(p.name)}</span>
+              <span class="game-over-like-rank">${rankLabels[i] || (i + 1) + 'th place'}</span>
+            </div>
+          </div>
+          <div class="game-over-like-total">
+            <span class="game-over-like-total-label">All Likes</span>
+            <span class="game-over-like-total-value"><span class="score-like-heart">❤️</span><span>${p.likes_received || 0}</span></span>
+          </div>
+        </div>`
+      ).join('');
+    }
+
+    // ── Utilities ─────────────────────────────────────
+    function escHtml(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+  </script>
+</body>
+</html>

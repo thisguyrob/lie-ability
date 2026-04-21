@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0d0f14">
+  <title>Lie-Ability</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ── Reset ─────────────────────────────────────── */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    [hidden] { display: none !important; }
+
+    /* ── CSS vars ───────────────────────────────────── */
+    :root {
+      --bg: linear-gradient(180deg, #0d0f14 0%, #151a23 100%);
+      --panel: rgba(22, 27, 38, 0.95);
+      --ink: #e8edf5;
+      --muted: #6b7a90;
+      --accent: #39ff6a;
+      --accent-soft: rgba(57, 255, 106, 0.12);
+      --accent-hover: #2ddf58;
+      --border: rgba(57, 255, 106, 0.18);
+      --shadow: 0 18px 45px rgba(0, 0, 0, 0.55);
+      --danger: #ff3d6b;
+      --font-heading: 'Rajdhani', Impact, system-ui, sans-serif;
+      --font-body: system-ui, sans-serif;
+    }
+
+    /* ── Layout ─────────────────────────────────────── */
+    body {
+      min-height: 100vh;
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--ink);
+      display: grid;
+      place-items: center;
+      padding: 20px;
+    }
+
+    .phone {
+      width: min(430px, 100%);
+      min-height: 100vh;
+      background: var(--panel);
+      overflow: hidden;
+    }
+
+    /* ── Scene system ───────────────────────────────── */
+    .p-scene { display: none; }
+    .p-scene.active { display: block; }
+
+    /* ── Onboarding layout ──────────────────────────── */
+    .p-scene.active[data-scene="onboarding"] {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: 1fr auto auto 1fr;
+      justify-items: center;
+      text-align: center;
+      padding: 24px;
+      gap: 24px;
+    }
+
+    .p-scene[data-scene="onboarding"] .top,
+    .p-scene[data-scene="onboarding"] .stack {
+      width: min(100%, 360px);
+      justify-items: center;
+    }
+
+    .p-scene[data-scene="onboarding"] .top {
+      padding: 0;
+      background: transparent;
+    }
+
+    .p-scene[data-scene="onboarding"] .stack {
+      padding: 0;
+    }
+
+    .p-scene[data-scene="onboarding"] .panel,
+    .p-scene[data-scene="onboarding"] .join-form,
+    .p-scene[data-scene="onboarding"] .field {
+      width: 100%;
+    }
+
+    .p-scene[data-scene="onboarding"] .label,
+    .p-scene[data-scene="onboarding"] .field-label {
+      text-align: center;
+    }
+
+    .p-scene[data-scene="onboarding"] .picker-grid {
+      justify-content: center;
+    }
+
+    /* ── Shared sections ────────────────────────────── */
+    .top {
+      padding: 28px 24px 18px;
+      background: var(--accent-soft);
+    }
+
+    .label {
+      font-size: 0.78rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .p-h1 {
+      font-size: clamp(2rem, 9vw, 3rem);
+      line-height: 1;
+      font-family: var(--font-heading);
+      color: var(--ink);
+    }
+
+    .stack { display: grid; gap: 18px; padding: 20px 24px 28px; }
+
+    /* ── Panel (transparent/borderless in new theme) ─ */
+    .panel {
+      padding: 0;
+      border-radius: 0;
+      border: none;
+      background: transparent;
+    }
+
+    /* ── CTA button ─────────────────────────────────── */
+    .cta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: var(--accent);
+      color: #fff;
+      font: 700 1rem/1 system-ui, sans-serif;
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .cta:hover:not(:disabled) { background: var(--accent-hover); }
+    .cta:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── Join form ──────────────────────────────────── */
+    .join-form { display: grid; gap: 18px; }
+    .field { display: grid; gap: 8px; }
+
+    .field-label {
+      font: 600 0.8rem/1.2 system-ui, sans-serif;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .name-input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1.5px solid var(--border);
+      font: 500 1rem/1.4 system-ui, sans-serif;
+      color: var(--ink);
+      background: rgba(255,255,255,0.06);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .name-input:focus { border-color: var(--accent); }
+
+    /* Panel name-input override (edit form) */
+    .panel .name-input {
+      padding-left: 0;
+      padding-right: 0;
+      border-width: 0 0 1.5px 0;
+      border-radius: 0;
+      background: transparent;
+    }
+
+    .panel .field + .field { padding-top: 4px; }
+    .panel .picker-grid { padding-top: 4px; }
+
+    /* ── Emoji / color pickers ──────────────────────── */
+    .picker-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .emoji-picker-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      width: fit-content;
+      margin-inline: auto;
+      justify-items: center;
+    }
+
+    .emoji-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      border: 2px solid transparent;
+      background: rgba(255,255,255,0.08);
+      font-size: 1.4rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink);
+      transition: border-color 0.1s, background 0.1s;
+    }
+
+    .emoji-btn.selected { border-color: var(--accent); background: var(--accent-soft); }
+
+    .emoji-btn-more {
+      color: var(--muted);
+      font: 700 1.15rem/1 system-ui, sans-serif;
+    }
+
+    .color-picker-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .color-swatch {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 3px solid transparent;
+      cursor: pointer;
+      outline: 2px solid transparent;
+      justify-self: center;
+      transition: transform 0.1s, border-color 0.1s;
+    }
+
+    .color-swatch.selected { border-color: white; outline-color: var(--ink); transform: scale(1.15); }
+
+    .color-swatch-more {
+      display: grid;
+      place-items: center;
+      background: rgba(255,255,255,0.08);
+      color: var(--muted);
+      font: 700 1rem/1 system-ui, sans-serif;
+    }
+
+    /* ── Emoji / color modals ───────────────────────── */
+    .emoji-modal[hidden] { display: none !important; }
+
+    .emoji-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 120;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .emoji-modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(5, 8, 14, 0.72);
+      backdrop-filter: blur(4px);
+    }
+
+    .emoji-modal-card {
+      position: relative;
+      width: min(560px, 100%);
+      max-height: min(680px, calc(100vh - 48px));
+      display: grid;
+      gap: 16px;
+      padding: 20px;
+      border-radius: 20px;
+      background: color-mix(in srgb, var(--panel) 92%, black 8%);
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.42);
+      overflow: hidden;
+    }
+
+    .emoji-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .emoji-modal-title {
+      font: 700 1.05rem/1.2 var(--font-heading);
+      color: var(--ink);
+    }
+
+    .emoji-modal-close {
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.08);
+      color: var(--ink);
+      font: 700 1rem/1 system-ui, sans-serif;
+      cursor: pointer;
+    }
+
+    .emoji-modal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 10px;
+      max-height: min(480px, calc(100vh - 180px));
+      padding-right: 4px;
+      overflow: auto;
+      align-content: start;
+    }
+
+    .color-modal-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 14px;
+      max-height: min(480px, calc(100vh - 180px));
+      padding: 4px 6px 4px 2px;
+      overflow: auto;
+      align-content: start;
+    }
+
+    /* ── Lobby player card ──────────────────────────── */
+    .p-my-card { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+    .p-avatar-name { display: flex; align-items: center; gap: 14px; }
+
+    .p-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      flex-shrink: 0;
+    }
+
+    .my-name {
+      font: 700 1.2rem/1.3 system-ui, sans-serif;
+      color: var(--ink);
+    }
+
+    .edit-btn {
+      font: 600 0.85rem/1 system-ui, sans-serif;
+      color: var(--muted);
+      background: none;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 7px 13px;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .edit-btn:hover { color: var(--ink); border-color: var(--ink); }
+
+    .save-status {
+      font: 500 0.9rem/1.4 system-ui, sans-serif;
+      text-align: center;
+      color: var(--accent);
+    }
+
+    .save-status.error { color: var(--danger); }
+
+    .join-error {
+      font: 500 0.9rem/1.4 system-ui, sans-serif;
+      color: var(--danger);
+      text-align: center;
+    }
+
+    /* ── Wait panel ─────────────────────────────────── */
+    .wait-panel { text-align: center; }
+    .wait-text { font: 500 0.95rem/1.6 system-ui, sans-serif; color: var(--muted); }
+
+    /* ── Category pick ──────────────────────────────── */
+    .picker-status-card { display: grid; gap: 8px; }
+    .picker-status-label {
+      font: 600 0.75rem/1.2 system-ui, sans-serif;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .picker-status-name {
+      font: 700 1.15rem/1.2 system-ui, sans-serif;
+      color: var(--ink);
+    }
+
+    .category-picker-panel {
+      display: grid;
+      gap: 16px;
+      padding: 18px;
+      border-radius: 20px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06), 0 18px 40px rgba(0, 0, 0, 0.18);
+    }
+
+    .category-picker-header { display: grid; gap: 6px; }
+    .category-picker-title { font: 700 1rem/1.2 system-ui, sans-serif; color: var(--ink); }
+    .category-picker-help { font: 500 0.92rem/1.5 system-ui, sans-serif; color: var(--muted); }
+    .category-picker-list { display: grid; gap: 10px; }
+
+    .cat-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      width: 100%;
+      padding: 16px 18px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.05);
+      color: var(--ink);
+      font: 700 1rem/1.15 system-ui, sans-serif;
+      border: 1px solid rgba(255,255,255,0.08);
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 0.15s, background 0.15s, transform 0.15s, box-shadow 0.15s;
+    }
+
+    .cat-btn:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.14);
+      transform: translateY(-1px);
+    }
+
+    .cat-btn.is-selected {
+      background: color-mix(in srgb, var(--accent-soft) 82%, rgba(255,255,255,0.03) 18%);
+      border-color: color-mix(in srgb, var(--accent) 28%, transparent 72%);
+      box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent 82%);
+    }
+
+    .cat-btn-meta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 26px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--accent-soft) 82%, white 8%);
+      font: 700 0.68rem/1 system-ui, sans-serif;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    /* ── In-game scenes ─────────────────────────────── */
+    .question-text { font: 500 1.05rem/1.6 system-ui, sans-serif; color: var(--ink); }
+
+    .answer-btn {
+      display: block;
+      width: 100%;
+      padding: 14px 0;
+      border-radius: 0;
+      border: none;
+      background: transparent;
+      font: 500 1rem/1.4 system-ui, sans-serif;
+      color: var(--ink);
+      cursor: pointer;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      transition: color 0.12s;
+    }
+
+    .answer-btn:hover:not(:disabled) { color: var(--accent); }
+    .answer-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .like-btn {
+      padding: 8px 14px;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      background: rgba(255,255,255,0.06);
+      font-size: 1.1rem;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: border-color 0.12s, background 0.12s;
+    }
+
+    .like-btn:hover { border-color: var(--accent); }
+    .like-btn.liked { border-color: var(--accent); background: var(--accent-soft); }
+
+    .vote-badge { font: 600 0.8rem/1.2 system-ui, sans-serif; color: var(--muted); }
+
+    .answer-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .answer-text-col { flex: 1; min-width: 0; }
+
+    .result-real {
+      border-color: transparent !important;
+      background: transparent !important;
+      box-shadow: none !important;
+    }
+
+    /* ── Round results ──────────────────────────────── */
+    .score-change-box {
+      padding: 16px 0 0;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      text-align: center;
+    }
+
+    .score-change-label {
+      font: 600 0.8rem/1.2 system-ui, sans-serif;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .score-change-num {
+      font: 700 2rem/1 system-ui, sans-serif;
+      color: var(--accent);
+    }
+
+    /* ── Game over ──────────────────────────────────── */
+    .final-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      font: 600 1rem/1.3 system-ui, sans-serif;
+      color: var(--ink);
+    }
+
+    .final-score { color: var(--ink); }
+    .final-row.rank-1 .final-score { color: var(--accent); }
+
+    .p-inline-text { font: 500 0.95rem/1.6 system-ui, sans-serif; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <main class="phone">
+
+    <!-- Onboarding -->
+    <div class="p-scene active" data-scene="onboarding">
+      {% include "player/scenes/onboarding.html" %}
+    </div>
+
+    <!-- Lobby -->
+    <div class="p-scene" data-scene="lobby">
+      {% include "player/scenes/lobby.html" %}
+    </div>
+
+    <!-- Category Pick -->
+    <div class="p-scene" data-scene="category_pick">
+      <section class="top">
+        <p class="label">Category Pick</p>
+        <h1 class="p-h1" id="cp-heading">Picking…</h1>
+      </section>
+      <section class="stack" id="cp-picker-section" hidden></section>
+      <section class="stack" id="cp-waiter-section" hidden>
+        <div class="panel wait-panel">
+          <p id="cp-wait-msg" class="wait-text">Waiting for the host to pick a category…</p>
+        </div>
+      </section>
+    </div>
+
+    <!-- Lie Submission -->
+    <div class="p-scene" data-scene="lie_submission">
+      <section class="top">
+        <p class="label">Submit Your Lie</p>
+        <p class="question-text" id="ls-prompt" style="margin-top:8px"></p>
+      </section>
+      <section class="stack">
+        <div class="panel">
+          <input type="text" id="lie-input" class="name-input"
+                 placeholder="Enter your lie…" autocomplete="off" maxlength="200" />
+        </div>
+        <button type="button" id="submit-lie-btn" class="cta">Submit Lie</button>
+        <p id="lie-submitted-msg" class="p-inline-text" style="text-align:center" hidden>
+          Lie submitted! Waiting for others…
+        </p>
+      </section>
+    </div>
+
+    <!-- Voting -->
+    <div class="p-scene" data-scene="voting">
+      <section class="top">
+        <p class="label">Voting</p>
+        <h1 class="p-h1">Which is true?</h1>
+      </section>
+      <section class="stack" id="voting-answers"></section>
+      <p id="voting-status" class="p-inline-text" style="text-align:center;padding:0 24px 20px" hidden>
+        You voted! Waiting for others…
+      </p>
+    </div>
+
+    <!-- Likes -->
+    <div class="p-scene" data-scene="likes">
+      <section class="top">
+        <p class="label">Likes</p>
+        <h1 class="p-h1">Like your fave!</h1>
+      </section>
+      <section class="stack" id="likes-answers"></section>
+    </div>
+
+    <!-- Round Results -->
+    <div class="p-scene" data-scene="round_results">
+      <section class="top">
+        <p class="label">Results</p>
+        <h1 class="p-h1">The answer was…</h1>
+      </section>
+      <section class="stack">
+        <div class="panel result-real" id="rr-real-answer-box">
+          <p id="rr-real-answer" class="question-text"></p>
+        </div>
+        <div class="score-change-box" id="rr-score-change">
+          <p class="score-change-label">Your score</p>
+          <p class="score-change-num" id="rr-delta">+0</p>
+        </div>
+      </section>
+    </div>
+
+    <!-- Game Over -->
+    <div class="p-scene" data-scene="game_over">
+      <section class="top">
+        <p class="label">Game Over</p>
+        <h1 class="p-h1">Final Scores</h1>
+      </section>
+      <section class="stack" id="go-scores"></section>
+    </div>
+
+  </main>
+
+  <script src="/static/socket.io.min.js"></script>
+  <script>
+    const STORAGE_KEY = 'lieability_player';
+
+    const EMOJI_CATALOG = [
+      { emoji: '😀', label: 'grinning face' },
+      { emoji: '😁', label: 'beaming face' },
+      { emoji: '😂', label: 'face with tears of joy' },
+      { emoji: '🤣', label: 'rolling on the floor laughing' },
+      { emoji: '😊', label: 'smiling face with smiling eyes' },
+      { emoji: '😍', label: 'smiling face with heart-eyes' },
+      { emoji: '😎', label: 'smiling face with sunglasses' },
+      { emoji: '🤩', label: 'star-struck' },
+      { emoji: '🥳', label: 'partying face' },
+      { emoji: '😇', label: 'smiling face with halo' },
+      { emoji: '🤠', label: 'cowboy hat face' },
+      { emoji: '🧐', label: 'face with monocle' },
+      { emoji: '🤓', label: 'nerd face' },
+      { emoji: '😺', label: 'grinning cat' },
+      { emoji: '😸', label: 'grinning cat with smiling eyes' },
+      { emoji: '😻', label: 'smiling cat with heart-eyes' },
+      { emoji: '🙈', label: 'see-no-evil monkey' },
+      { emoji: '🙉', label: 'hear-no-evil monkey' },
+      { emoji: '🙊', label: 'speak-no-evil monkey' },
+      { emoji: '👻', label: 'ghost' },
+      { emoji: '💀', label: 'skull' },
+      { emoji: '👽', label: 'alien' },
+      { emoji: '🤖', label: 'robot' },
+      { emoji: '👾', label: 'alien monster' },
+      { emoji: '🎃', label: 'jack-o-lantern' },
+      { emoji: '🎭', label: 'performing arts' },
+      { emoji: '🧙', label: 'mage' },
+      { emoji: '🧛', label: 'vampire' },
+      { emoji: '🧞', label: 'genie' },
+      { emoji: '🧜', label: 'merperson' },
+      { emoji: '🦄', label: 'unicorn' },
+      { emoji: '🐶', label: 'dog' },
+      { emoji: '🐺', label: 'wolf' },
+      { emoji: '🦊', label: 'fox' },
+      { emoji: '🐱', label: 'cat' },
+      { emoji: '🦁', label: 'lion' },
+      { emoji: '🐯', label: 'tiger' },
+      { emoji: '🐴', label: 'horse' },
+      { emoji: '🦓', label: 'zebra' },
+      { emoji: '🦌', label: 'deer' },
+      { emoji: '🐮', label: 'cow' },
+      { emoji: '🐷', label: 'pig' },
+      { emoji: '🐭', label: 'mouse' },
+      { emoji: '🐹', label: 'hamster' },
+      { emoji: '🐰', label: 'rabbit' },
+      { emoji: '🐻', label: 'bear' },
+      { emoji: '🐼', label: 'panda' },
+      { emoji: '🐨', label: 'koala' },
+      { emoji: '🐸', label: 'frog' },
+      { emoji: '🐵', label: 'monkey face' },
+      { emoji: '🦍', label: 'gorilla' },
+      { emoji: '🐔', label: 'chicken' },
+      { emoji: '🐧', label: 'penguin' },
+      { emoji: '🦉', label: 'owl' },
+      { emoji: '🦅', label: 'eagle' },
+      { emoji: '🦜', label: 'parrot' },
+      { emoji: '🦆', label: 'duck' },
+      { emoji: '🦢', label: 'swan' },
+      { emoji: '🦚', label: 'peacock' },
+      { emoji: '🐙', label: 'octopus' },
+      { emoji: '🦑', label: 'squid' },
+      { emoji: '🦀', label: 'crab' },
+      { emoji: '🦞', label: 'lobster' },
+      { emoji: '🐠', label: 'tropical fish' },
+      { emoji: '🐬', label: 'dolphin' },
+      { emoji: '🦈', label: 'shark' },
+      { emoji: '🐢', label: 'turtle' },
+      { emoji: '🐍', label: 'snake' },
+      { emoji: '🦎', label: 'lizard' },
+      { emoji: '🦋', label: 'butterfly' },
+      { emoji: '🐝', label: 'honeybee' },
+      { emoji: '🐞', label: 'lady beetle' },
+      { emoji: '🌸', label: 'cherry blossom' },
+      { emoji: '🌻', label: 'sunflower' },
+      { emoji: '🌈', label: 'rainbow' },
+      { emoji: '⭐', label: 'star' },
+      { emoji: '🌙', label: 'crescent moon' },
+      { emoji: '🔥', label: 'fire' },
+      { emoji: '❄️', label: 'snowflake' },
+      { emoji: '🍕', label: 'pizza' },
+      { emoji: '🍔', label: 'hamburger' },
+      { emoji: '🌮', label: 'taco' },
+      { emoji: '🍩', label: 'doughnut' },
+      { emoji: '🍦', label: 'soft ice cream' },
+      { emoji: '🎲', label: 'game die' },
+      { emoji: '🎯', label: 'direct hit' },
+      { emoji: '🚀', label: 'rocket' },
+      { emoji: '🎈', label: 'balloon' },
+      { emoji: '💎', label: 'gem stone' },
+      { emoji: '👑', label: 'crown' },
+      { emoji: '🪄', label: 'magic wand' },
+      { emoji: '❤️', label: 'red heart' },
+      { emoji: '🧠', label: 'brain' },
+    ].sort((a, b) => a.label.localeCompare(b.label));
+
+    const COLOR_CATALOG = [
+      { value: '#1abc9c', label: 'aqua teal' },
+      { value: '#ff8c69', label: 'apricot coral' },
+      { value: '#00bcd4', label: 'azure cyan' },
+      { value: '#7c4dff', label: 'blue violet' },
+      { value: '#8b5cf6', label: 'bright amethyst' },
+      { value: '#0ea5e9', label: 'bright sky' },
+      { value: '#f97316', label: 'burnt orange' },
+      { value: '#ec4899', label: 'candy pink' },
+      { value: '#14b8a6', label: 'caribbean teal' },
+      { value: '#ef4444', label: 'cherry red' },
+      { value: '#84cc16', label: 'citron' },
+      { value: '#6366f1', label: 'cosmic indigo' },
+      { value: '#10b981', label: 'emerald' },
+      { value: '#059669', label: 'forest green' },
+      { value: '#f43f5e', label: 'fuchsia rose' },
+      { value: '#22c55e', label: 'grass green' },
+      { value: '#eab308', label: 'goldenrod' },
+      { value: '#facc15', label: 'honey yellow' },
+      { value: '#3b82f6', label: 'ice blue' },
+      { value: '#818cf8', label: 'iris' },
+      { value: '#f59e0b', label: 'marigold' },
+      { value: '#fb7185', label: 'melon pink' },
+      { value: '#e11d48', label: 'mulberry red' },
+      { value: '#a855f7', label: 'orchid' },
+      { value: '#e67e22', label: 'orange' },
+      { value: '#f472b6', label: 'peony pink' },
+      { value: '#64748b', label: 'slate' },
+      { value: '#0f766e', label: 'spruce' },
+      { value: '#2dd4bf', label: 'tropical mint' },
+      { value: '#38bdf8', label: 'turquoise sky' },
+      { value: '#9b59b6', label: 'violet' },
+      { value: '#e91e63', label: 'wild magenta' },
+      { value: '#f1c40f', label: 'yellow' },
+      { value: '#e74c3c', label: 'red' },
+      { value: '#2ecc71', label: 'green' },
+      { value: '#3498db', label: 'blue' },
+    ].filter((item, i, arr) => arr.findIndex(c => c.value === item.value) === i)
+     .sort((a, b) => a.label.localeCompare(b.label));
+
+    let currentPlayer = null;
+    let selectedEmoji = EMOJI_CATALOG[0].emoji;
+    let selectedColor = COLOR_CATALOG[0].value;
+    let editEmoji = EMOJI_CATALOG[0].emoji;
+    let editColor = COLOR_CATALOG[0].value;
+
+    let currentPhase = null;
+    let hasSubmittedLie = false;
+    let votedAnswerId = null;
+    let likedAnswerId = null;
+    let phaseClockDeadlineTs = null;
+    let phaseClockTimerId = null;
+
+    function stopPhaseClock() {
+      phaseClockDeadlineTs = null;
+      if (phaseClockTimerId !== null) {
+        clearTimeout(phaseClockTimerId);
+        phaseClockTimerId = null;
+      }
+    }
+
+    function syncPhaseClock(deadlineTs) {
+      stopPhaseClock();
+      if (deadlineTs == null) return;
+      phaseClockDeadlineTs = deadlineTs;
+      const tick = () => {
+        if (phaseClockDeadlineTs == null) return;
+        const remaining = Math.max(0, Math.ceil(phaseClockDeadlineTs - (Date.now() / 1000)));
+        if (remaining === 0) { stopPhaseClock(); return; }
+        phaseClockTimerId = setTimeout(tick, 250);
+      };
+      tick();
+    }
+
+    // ── Picker builders ───────────────────────────────
+
+    function buildEmojiPicker(containerId, initial, onChange) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = '';
+      container.className = 'picker-grid emoji-picker-grid';
+      EMOJI_CATALOG.slice(0, 7).forEach(item => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'emoji-btn' + (item.emoji === initial ? ' selected' : '');
+        btn.textContent = item.emoji;
+        btn.title = item.label;
+        btn.addEventListener('click', () => {
+          container.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          onChange(item.emoji);
+        });
+        container.appendChild(btn);
+      });
+      const moreBtn = document.createElement('button');
+      moreBtn.type = 'button';
+      moreBtn.className = 'emoji-btn emoji-btn-more';
+      moreBtn.textContent = '+';
+      moreBtn.setAttribute('aria-haspopup', 'dialog');
+      moreBtn.addEventListener('click', () => openEmojiModal(container, onChange));
+      container.appendChild(moreBtn);
+    }
+
+    function buildColorPicker(containerId, initial, onChange) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = '';
+      container.className = 'picker-grid color-picker-grid';
+      COLOR_CATALOG.slice(0, 7).forEach(item => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'color-swatch' + (item.value === initial ? ' selected' : '');
+        btn.style.background = item.value;
+        btn.setAttribute('aria-label', item.label);
+        btn.title = item.label;
+        btn.addEventListener('click', () => {
+          container.querySelectorAll('.color-swatch').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          onChange(item.value);
+        });
+        container.appendChild(btn);
+      });
+      const moreBtn = document.createElement('button');
+      moreBtn.type = 'button';
+      moreBtn.className = 'color-swatch color-swatch-more';
+      moreBtn.textContent = '+';
+      moreBtn.setAttribute('aria-haspopup', 'dialog');
+      moreBtn.addEventListener('click', () => openColorModal(container, onChange));
+      container.appendChild(moreBtn);
+    }
+
+    // ── Emoji modal ───────────────────────────────────
+
+    function openEmojiModal(pickerContainer, onChange) {
+      const modal = document.getElementById('emoji-modal');
+      if (!modal) return;
+      const grid = modal.querySelector('.emoji-modal-grid');
+      grid.innerHTML = '';
+      EMOJI_CATALOG.forEach(item => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'emoji-btn';
+        btn.textContent = item.emoji;
+        btn.title = item.label;
+        btn.setAttribute('aria-label', item.label);
+        btn.addEventListener('click', () => {
+          onChange(item.emoji);
+          modal.hidden = true;
+          pickerContainer.querySelectorAll('.emoji-btn:not(.emoji-btn-more)').forEach(b => b.classList.remove('selected'));
+        });
+        grid.appendChild(btn);
+      });
+      modal.hidden = false;
+    }
+
+    function openColorModal(pickerContainer, onChange) {
+      const modal = document.getElementById('color-modal');
+      if (!modal) return;
+      const grid = modal.querySelector('.color-modal-grid');
+      grid.innerHTML = '';
+      COLOR_CATALOG.forEach(item => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'color-swatch';
+        btn.style.background = item.value;
+        btn.title = item.label;
+        btn.setAttribute('aria-label', item.label);
+        btn.addEventListener('click', () => {
+          onChange(item.value);
+          modal.hidden = true;
+        });
+        grid.appendChild(btn);
+      });
+      modal.hidden = false;
+    }
+
+    function setupModalCloseHandlers() {
+      document.querySelectorAll('[data-close-emoji-modal]').forEach(el =>
+        el.addEventListener('click', () => {
+          const m = document.getElementById('emoji-modal');
+          if (m) m.hidden = true;
+        })
+      );
+      document.querySelectorAll('[data-close-color-modal]').forEach(el =>
+        el.addEventListener('click', () => {
+          const m = document.getElementById('color-modal');
+          if (m) m.hidden = true;
+        })
+      );
+      document.addEventListener('keydown', e => {
+        if (e.key !== 'Escape') return;
+        const em = document.getElementById('emoji-modal');
+        const cm = document.getElementById('color-modal');
+        if (em && !em.hidden) em.hidden = true;
+        if (cm && !cm.hidden) cm.hidden = true;
+      });
+    }
+
+    // ── Onboarding pickers ────────────────────────────
+    buildEmojiPicker('emoji-grid', selectedEmoji, em => { selectedEmoji = em; });
+    buildColorPicker('color-grid', selectedColor, col => { selectedColor = col; });
+    setupModalCloseHandlers();
+
+    // ── Name input enables join button ────────────────
+    const nameInput = document.getElementById('name-input');
+    const joinBtn = document.getElementById('join-btn');
+    nameInput.addEventListener('input', () => {
+      joinBtn.disabled = nameInput.value.trim().length === 0;
+    });
+
+    // ── Join form submit ──────────────────────────────
+    document.getElementById('join-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = nameInput.value.trim();
+      if (!name) return;
+
+      joinBtn.disabled = true;
+      joinBtn.textContent = 'Joining…';
+      const errorEl = document.getElementById('join-error');
+      errorEl.hidden = true;
+
+      try {
+        const res = await fetch('/api/players', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({name, avatar_emoji: selectedEmoji, avatar_bg_color: selectedColor}),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Could not join');
+
+        currentPlayer = {player_id: data.player_id, name, avatar_emoji: selectedEmoji, avatar_bg_color: selectedColor};
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(currentPlayer));
+        socket.emit('identify', {player_id: data.player_id});
+        enterLobby();
+        showScene('lobby');
+      } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.hidden = false;
+        joinBtn.disabled = false;
+        joinBtn.textContent = 'Join Game';
+      }
+    });
+
+    // ── Edit form (lobby) ─────────────────────────────
+    function enterLobby() {
+      editEmoji = currentPlayer.avatar_emoji;
+      editColor = currentPlayer.avatar_bg_color;
+      document.getElementById('edit-name').value = currentPlayer.name;
+      buildEmojiPicker('edit-emoji-grid', editEmoji, em => { editEmoji = em; updatePreview(); });
+      buildColorPicker('edit-color-grid', editColor, col => { editColor = col; updatePreview(); });
+      document.getElementById('edit-name').addEventListener('input', updatePreview);
+      showPlayerCard();
+    }
+
+    function updatePreview() {
+      const name = document.getElementById('edit-name').value.trim() || currentPlayer.name;
+      renderPlayerCard(name, editEmoji, editColor);
+    }
+
+    document.getElementById('edit-toggle-btn').addEventListener('click', () => {
+      const form = document.getElementById('edit-form');
+      const btn = document.getElementById('edit-toggle-btn');
+      const opening = form.hidden;
+      form.hidden = !opening;
+      btn.textContent = opening ? 'Cancel' : 'Edit';
+    });
+
+    function closeEditForm() {
+      document.getElementById('edit-form').hidden = true;
+      document.getElementById('edit-toggle-btn').textContent = 'Edit';
+    }
+
+    document.getElementById('edit-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('edit-name').value.trim();
+      if (!name) return;
+
+      const saveBtn = document.getElementById('edit-save-btn');
+      const statusEl = document.getElementById('edit-status');
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving…';
+      statusEl.hidden = true;
+      statusEl.className = 'save-status';
+
+      try {
+        const res = await fetch(`/api/players/${currentPlayer.player_id}`, {
+          method: 'PATCH',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({name, avatar_emoji: editEmoji, avatar_bg_color: editColor}),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Could not save');
+
+        currentPlayer = {...currentPlayer, name, avatar_emoji: editEmoji, avatar_bg_color: editColor};
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(currentPlayer));
+        showPlayerCard();
+        closeEditForm();
+        statusEl.textContent = 'Saved!';
+        statusEl.hidden = false;
+        setTimeout(() => { statusEl.hidden = true; }, 2000);
+      } catch (err) {
+        statusEl.textContent = err.message;
+        statusEl.className = 'save-status error';
+        statusEl.hidden = false;
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Changes';
+      }
+    });
+
+    // ── Lie submission ────────────────────────────────
+    document.getElementById('submit-lie-btn').addEventListener('click', async () => {
+      const input = document.getElementById('lie-input');
+      const btn = document.getElementById('submit-lie-btn');
+      const text = input.value.trim();
+      if (!text || !currentPlayer || hasSubmittedLie) return;
+
+      btn.disabled = true;
+      hasSubmittedLie = true;
+
+      try {
+        const res = await fetch('/api/game/lie', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({player_id: currentPlayer.player_id, text}),
+        });
+        if (res.ok) {
+          document.getElementById('lie-submitted-msg').hidden = false;
+        } else {
+          btn.disabled = false;
+          hasSubmittedLie = false;
+        }
+      } catch {
+        btn.disabled = false;
+        hasSubmittedLie = false;
+      }
+    });
+
+    // ── Vote handler ──────────────────────────────────
+    async function handleVote(answerId) {
+      if (votedAnswerId || !currentPlayer) return;
+      votedAnswerId = answerId;
+      document.getElementById('voting-status').hidden = false;
+      document.querySelectorAll('#voting-answers [data-answer-id]').forEach(btn => { btn.disabled = true; });
+      try {
+        await fetch('/api/game/vote', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({player_id: currentPlayer.player_id, answer_id: answerId}),
+        });
+      } catch { /* server validates */ }
+    }
+
+    // ── Like handler ──────────────────────────────────
+    async function handleLike(btn, answerId) {
+      if (likedAnswerId || !currentPlayer) return;
+      likedAnswerId = answerId;
+      btn.classList.add('liked');
+      try {
+        await fetch('/api/game/like', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({player_id: currentPlayer.player_id, answer_id: answerId}),
+        });
+      } catch { /* server validates */ }
+    }
+
+    // ── Category pick handler ─────────────────────────
+    async function handleCategoryPick(categoryId) {
+      if (!currentPlayer) return;
+      try {
+        await fetch('/api/game/category', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({player_id: currentPlayer.player_id, category_id: categoryId}),
+        });
+      } catch { /* server transitions phase */ }
+    }
+
+    // ── Socket.IO ─────────────────────────────────────
+    const socket = io();
+
+    socket.on('game_state', (state) => {
+      if (!currentPlayer) return;
+      if (state.players.length > 0 && !state.players.some(p => p.player_id === currentPlayer.player_id)) return;
+      syncPhaseClock(state.phase_deadline_ts ?? null);
+      const phaseChanged = state.phase !== currentPhase;
+      if (phaseChanged) {
+        hasSubmittedLie = false;
+        votedAnswerId = null;
+        if (state.phase !== 'likes') likedAnswerId = null;
+        currentPhase = state.phase;
+      }
+      showScene(state.phase);
+      renderPhase(state, phaseChanged);
+    });
+
+    socket.on('phase_change', ({deadline_ts}) => {
+      syncPhaseClock(deadline_ts ?? null);
+    });
+
+    socket.on('timer_stop', () => {
+      stopPhaseClock();
+    });
+
+    async function renderPhase(state, phaseChanged) {
+      switch (state.phase) {
+        case 'category_pick':  if (phaseChanged) await renderCategoryPick(state); break;
+        case 'lie_submission': if (phaseChanged) renderLieSubmission(state); break;
+        case 'voting':         renderVoting(state); break;
+        case 'likes':          renderLikes(state); break;
+        case 'round_results':  if (phaseChanged) renderRoundResults(state); break;
+        case 'game_over':      if (phaseChanged) renderGameOver(state); break;
+      }
+    }
+
+    async function renderCategoryPick(state) {
+      const isPicker = currentPlayer && state.active_player_id === currentPlayer.player_id;
+      const pickerPlayer = state.players.find(p => p.player_id === state.active_player_id);
+      const pickerName = pickerPlayer ? pickerPlayer.name : 'someone';
+
+      document.getElementById('cp-heading').textContent = isPicker ? 'Your pick!' : `${pickerName} is picking…`;
+
+      const pickerSection = document.getElementById('cp-picker-section');
+      const waiterSection = document.getElementById('cp-waiter-section');
+
+      if (isPicker) {
+        pickerSection.hidden = false;
+        waiterSection.hidden = true;
+        pickerSection.innerHTML = '<p class="wait-text" style="text-align:center">Loading categories…</p>';
+        try {
+          const res = await fetch('/api/categories');
+          const cats = await res.json();
+          pickerSection.innerHTML = `
+            <div class="category-picker-panel">
+              <div class="category-picker-header">
+                <p class="category-picker-title">Choose a category</p>
+                <p class="category-picker-help">Pick the topic everyone will bluff on this round.</p>
+              </div>
+              <div class="category-picker-list">
+                ${cats.map(c =>
+                  `<button class="cat-btn" data-category-id="${c.id}" onclick="handleCategoryPick(${c.id})">${escHtml(c.name)}</button>`
+                ).join('')}
+              </div>
+            </div>
+          `;
+        } catch {
+          pickerSection.innerHTML = '<p class="wait-text" style="text-align:center">Error loading categories</p>';
+        }
+      } else {
+        pickerSection.hidden = true;
+        pickerSection.innerHTML = '';
+        waiterSection.hidden = false;
+        document.getElementById('cp-wait-msg').textContent = `Waiting for ${pickerName} to pick a category…`;
+      }
+    }
+
+    function renderLieSubmission(state) {
+      const t = state.current_turn;
+      if (!t) return;
+      document.getElementById('ls-prompt').textContent = t.question_prompt;
+      document.getElementById('lie-input').value = '';
+      document.getElementById('lie-input').disabled = false;
+      document.getElementById('submit-lie-btn').disabled = false;
+      document.getElementById('lie-submitted-msg').hidden = true;
+    }
+
+    function renderVoting(state) {
+      const t = state.current_turn;
+      if (!t) return;
+      const answersEl = document.getElementById('voting-answers');
+      const statusEl = document.getElementById('voting-status');
+
+      if (!votedAnswerId) {
+        answersEl.innerHTML = t.answers.map(a =>
+          `<button class="answer-btn" data-answer-id="${a.answer_id}"
+                   onclick="handleVote('${a.answer_id}')">${escHtml(a.normalized_text || a.text)}</button>`
+        ).join('');
+        statusEl.hidden = true;
+        return;
+      }
+
+      answersEl.innerHTML = t.answers.map(a => {
+        const isOwn = currentPlayer && a.author_id === currentPlayer.player_id;
+        const isLiked = a.answer_id === likedAnswerId;
+        return `<div class="panel" data-like-answer="${a.answer_id}">
+          <div class="answer-row">
+            <div class="answer-text-col">
+              <p>${escHtml(a.normalized_text || a.text)}</p>
+            </div>
+            ${!isOwn ? `<button class="like-btn${isLiked ? ' liked' : ''}"
+                               data-like-id="${a.answer_id}"
+                               onclick="handleLike(this,'${a.answer_id}')">❤️</button>` : ''}
+          </div>
+        </div>`;
+      }).join('');
+      statusEl.hidden = false;
+      statusEl.textContent = likedAnswerId
+        ? 'You voted and liked an answer. Waiting for others…'
+        : 'You voted! You can like another submission while others finish.';
+    }
+
+    function renderLikes(state) {
+      const t = state.current_turn;
+      if (!t) return;
+      document.getElementById('likes-answers').innerHTML = t.answers.map(a => {
+        const isLiked = a.answer_id === likedAnswerId;
+        const isOwn = currentPlayer && a.author_id === currentPlayer.player_id;
+        return `<div class="panel">
+          <div class="answer-row">
+            <div class="answer-text-col">
+              <p>${escHtml(a.normalized_text || a.text)}</p>
+              <p class="vote-badge" data-vote-count="${a.vote_count}">${a.vote_count} vote${a.vote_count !== 1 ? 's' : ''}</p>
+            </div>
+            ${!isOwn ? `<button class="like-btn${isLiked ? ' liked' : ''}"
+                               data-like-id="${a.answer_id}"
+                               onclick="handleLike(this,'${a.answer_id}')">❤️</button>` : ''}
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function renderRoundResults(state) {
+      const t = state.current_turn;
+      if (!t) return;
+      document.getElementById('rr-real-answer').textContent = t.real_answer_text;
+      const delta = (t.score_changes || {})[currentPlayer ? currentPlayer.player_id : ''] || 0;
+      document.getElementById('rr-delta').textContent = `+${delta}`;
+    }
+
+    function renderGameOver(state) {
+      document.getElementById('go-scores').innerHTML = (state.final_scores || []).map((p, i) =>
+        `<div class="final-row${i === 0 ? ' rank-1' : ''}">
+          <span>${i + 1}. ${escHtml(p.name)}</span>
+          <span class="final-score">${p.score}</span>
+        </div>`
+      ).join('');
+    }
+
+    // ── Helpers ───────────────────────────────────────
+    function showScene(name) {
+      document.querySelectorAll('.p-scene').forEach(s => s.classList.remove('active'));
+      const el = document.querySelector('.p-scene[data-scene="' + name + '"]');
+      if (el) el.classList.add('active');
+    }
+
+    function showPlayerCard() {
+      renderPlayerCard(currentPlayer.name, currentPlayer.avatar_emoji, currentPlayer.avatar_bg_color);
+    }
+
+    function renderPlayerCard(name, emoji, color) {
+      document.getElementById('player-info').innerHTML = `
+        <div class="p-avatar-name">
+          <span class="p-avatar" style="background:${color}">${emoji}</span>
+          <span class="my-name">${escHtml(name)}</span>
+        </div>
+      `;
+    }
+
+    function escHtml(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // ── Rejoin on page load ───────────────────────────
+    (async () => {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (!stored) return;
+
+      let saved;
+      try { saved = JSON.parse(stored); } catch { localStorage.removeItem(STORAGE_KEY); return; }
+
+      try {
+        const res = await fetch('/api/players/rejoin', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({player_id: saved.player_id}),
+        });
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        currentPlayer = saved;
+        socket.emit('identify', {player_id: saved.player_id});
+        if (data.state.phase === 'lobby') enterLobby();
+        else showPlayerCard();
+        showScene(data.state.phase);
+        currentPhase = data.state.phase;
+        renderPhase(data.state, true);
+      } catch {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    })();
+  </script>
+</body>
+</html>

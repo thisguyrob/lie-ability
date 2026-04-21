@@ -1,0 +1,3134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lie-Ability — Theme Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Paytone+One&display=swap" rel="stylesheet">
+  <style>
+    /* ── Reset ─────────────────────────────────────── */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    [hidden] { display: none !important; }
+
+    /* ── CSS vars — seeded by JS on init ───────────── */
+    :root {
+      --bg: linear-gradient(135deg, #0d0f14, #151a23);
+      --panel: rgba(22, 27, 38, 0.95);
+      --ink: #e8edf5;
+      --muted: #6b7a90;
+      --accent: #39ff6a;
+      --accent-soft: rgba(57, 255, 106, 0.12);
+      --accent-hover: #2ddf58;
+      --border: rgba(57, 255, 106, 0.18);
+      --shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+      --danger: #ff3d6b;
+      --font-heading: 'Rajdhani', Impact, system-ui, sans-serif;
+      --font-body: system-ui, sans-serif;
+      --preview-controls-height: 72px;
+      --preview-bottom-space: 60px;
+      --preview-chrome-height: calc(var(--preview-controls-height) + var(--preview-bottom-space));
+    }
+
+    /* ── Preview chrome ─────────────────────────────── */
+    body {
+      font-family: system-ui, sans-serif;
+      background: var(--panel);
+      min-height: 100vh;
+    }
+
+    #preview-controls {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: #1a1d26;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 20px;
+      padding: 10px 20px;
+    }
+
+    .ctrl-group { display: flex; flex-direction: column; gap: 3px; }
+
+    .ctrl-label {
+      font: 600 0.68rem/1 system-ui, sans-serif;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      color: #7788aa;
+    }
+
+    .ctrl-pills { display: flex; gap: 4px; }
+
+    .pill {
+      padding: 5px 14px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: transparent;
+      color: #b0bdd0;
+      font: 600 0.82rem/1 system-ui, sans-serif;
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s, border-color 0.12s;
+      white-space: nowrap;
+    }
+
+    .pill:hover { background: rgba(255,255,255,0.06); }
+    .pill.active { background: #4c6ef5; border-color: #4c6ef5; color: white; }
+
+    #scene-select {
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      color: #b0bdd0;
+      font: 600 0.82rem/1 system-ui, sans-serif;
+      cursor: pointer;
+    }
+
+    .ctrl-sep {
+      width: 1px;
+      height: 28px;
+      background: rgba(255,255,255,0.1);
+      align-self: center;
+    }
+
+    /* ── Preview display area ───────────────────────── */
+    #preview-display {
+      padding-top: var(--preview-controls-height);
+      min-height: 100vh;
+      background: var(--panel);
+      transition: background 0.3s;
+      display: grid;
+      place-items: center;
+      padding-bottom: var(--preview-bottom-space);
+    }
+
+    /* ── ─── MAIN VIEW STYLES ─── ───────────────────── */
+
+    #view-main {
+      justify-self: stretch;
+      align-self: stretch;
+    }
+
+    #view-player {
+      justify-self: stretch;
+      align-self: stretch;
+      display: grid;
+      place-items: center;
+    }
+
+    .shell {
+      width: 100%;
+      min-height: calc(100vh - var(--preview-chrome-height));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--panel);
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      overflow: hidden;
+      transition: background 0.25s;
+    }
+
+    .stage {
+      width: min(100%, calc((100vh - var(--preview-chrome-height)) * 16 / 9));
+      max-height: calc(100vh - var(--preview-chrome-height));
+      height: auto;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      flex-shrink: 0;
+      container-type: size;
+      position: relative;
+    }
+
+    .m-scene { display: none; width: 100%; height: 100%; }
+    .m-scene.active { display: grid; width: 100%; height: 100%; }
+
+    /* Lobby */
+    .lobby {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(18px, 4cqi, 48px);
+      padding: clamp(18px, 4cqi, 48px);
+      min-height: 100%;
+      height: 100%;
+    }
+
+    .lobby-left {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: clamp(12px, 2cqi, 24px);
+    }
+
+    .eyebrow {
+      font: 600 clamp(0.62rem, 1.2cqi, 0.8rem)/1.2 var(--font-body);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      transition: color 0.2s;
+    }
+
+    .logo {
+      font-size: clamp(2rem, 6.2cqi, 5.5rem);
+      line-height: 0.95;
+      font-family: var(--font-heading);
+      color: var(--ink);
+      transition: color 0.2s, font-family 0.1s;
+    }
+
+    .qr-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: clamp(6px, 0.9cqi, 8px);
+    }
+
+    .qr-placeholder {
+      width: clamp(96px, 18cqi, 180px);
+      height: clamp(96px, 18cqi, 180px);
+      border-radius: clamp(8px, 1cqi, 10px);
+      background: rgba(255,255,255,0.08);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font: 500 clamp(0.65rem, 1.35cqi, 0.85rem)/1.4 system-ui, sans-serif;
+      color: var(--muted);
+    }
+
+    .join-hint {
+      font: 600 clamp(0.62rem, 1.2cqi, 0.8rem)/1.2 system-ui, sans-serif;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .join-url {
+      font: 500 clamp(0.65rem, 1.35cqi, 0.85rem)/1.4 system-ui, sans-serif;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .lobby-right {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: clamp(10px, 1.4cqi, 16px);
+    }
+
+    .section-label {
+      font: 600 clamp(0.62rem, 1.2cqi, 0.8rem)/1.2 system-ui, sans-serif;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .player-list { display: flex; flex-direction: column; align-items: center; gap: clamp(8px, 1.1cqi, 12px); width: 100%; }
+
+    .m-player-card {
+      width: min(100%, clamp(180px, 28cqi, 280px));
+      min-height: clamp(36px, 4.8cqi, 48px);
+      padding: clamp(6px, 0.9cqi, 8px) clamp(12px, 1.8cqi, 18px);
+      border-radius: clamp(12px, 1.8cqi, 18px);
+      background: rgba(255,255,255,0.10);
+      display: flex;
+      align-items: center;
+      gap: clamp(10px, 1.4cqi, 16px);
+    }
+
+    .m-avatar {
+      order: 1;
+      width: clamp(28px, 4.4cqi, 44px);
+      height: clamp(28px, 4.4cqi, 44px);
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(0.9rem, 2cqi, 1.4rem);
+      flex-shrink: 0;
+      align-self: center;
+    }
+
+    .player-name {
+      order: 2;
+      flex: 1;
+      font: 600 clamp(0.85rem, 2.3cqi, 1.1rem)/1.3 system-ui, sans-serif;
+      color: var(--ink);
+      text-align: center;
+      align-self: center;
+      transition: color 0.2s;
+    }
+
+    /* In-game scenes (main) */
+    .scene-pad {
+      padding: clamp(18px, 4cqi, 48px);
+      min-height: 100%;
+      height: 100%;
+      width: 100%;
+      display: grid;
+      align-content: start;
+      gap: clamp(14px, 2.4cqi, 28px);
+    }
+
+    .scene-pad.scene-pad-centered {
+      align-content: center;
+      justify-items: center;
+      text-align: center;
+    }
+
+    .scene-eyebrow {
+      font: 600 clamp(0.62rem, 1.2cqi, 0.8rem)/1.2 system-ui, sans-serif;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      transition: color 0.2s;
+    }
+
+    .scene-heading {
+      font-size: clamp(1.5rem, 4.5cqi, 3.5rem);
+      line-height: 1.1;
+      font-family: var(--font-heading);
+      color: var(--ink);
+      transition: color 0.2s, font-family 0.1s;
+    }
+
+    .scene-prompt {
+      font-size: clamp(1rem, 3.1cqi, 2rem);
+      line-height: 1.3;
+      font-family: var(--font-heading);
+      color: var(--ink);
+      transition: color 0.2s;
+    }
+
+    .submission-status-row {
+      width: min(100%, clamp(280px, 42cqi, 420px));
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      align-items: center;
+      justify-items: center;
+      gap: clamp(12px, 2cqi, 24px);
+    }
+
+    .lie-submission-status {
+      margin-top: clamp(28px, 6.4cqi, 72px);
+    }
+
+    .submission-avatar {
+      width: clamp(44px, 7cqi, 72px);
+      height: clamp(44px, 7cqi, 72px);
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(1.2rem, 3cqi, 2.2rem);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12);
+      transition: filter 0.2s, opacity 0.2s, transform 0.2s;
+    }
+
+    .submission-avatar.pending {
+      filter: grayscale(1) saturate(0.15);
+      opacity: 0.5;
+    }
+
+    .timer-progress {
+      width: min(100%, clamp(240px, 42cqi, 420px));
+      height: clamp(12px, 1.4cqi, 16px);
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.10);
+      box-shadow: inset 0 0 0 1px var(--border);
+      position: relative;
+    }
+
+    .timer-progress::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background:
+        linear-gradient(90deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 78%, white 22%) 100%);
+      transform-origin: left center;
+      animation: timer-drain 45s linear infinite;
+    }
+
+    @keyframes timer-drain {
+      from { transform: scaleX(1); }
+      to { transform: scaleX(0); }
+    }
+
+    .scene-sub {
+      font: 500 clamp(0.72rem, 1.5cqi, 0.95rem)/1.5 system-ui, sans-serif;
+      color: var(--muted);
+      transition: color 0.2s;
+    }
+
+    .answer-grid { display: grid; gap: clamp(10px, 1.4cqi, 14px); }
+
+    .voting-layout {
+      width: min(100%, clamp(420px, 58cqi, 920px));
+      justify-self: center;
+      display: grid;
+      gap: clamp(12px, 2cqi, 22px);
+      align-content: center;
+    }
+
+    .voting-header {
+      display: grid;
+      gap: clamp(8px, 1.4cqi, 14px);
+      justify-items: center;
+      text-align: center;
+    }
+
+    .voting-kicker {
+      font: 600 clamp(0.72rem, 1.45cqi, 0.95rem)/1.2 system-ui, sans-serif;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      transition: color 0.2s;
+    }
+
+    .voting-spacer {
+      height: clamp(0.72rem, 1.45cqi, 0.95rem);
+    }
+
+    .voting-answer-grid {
+      --voting-columns: 2;
+      width: min(100%, clamp(300px, 42cqi, 620px));
+      justify-self: center;
+      display: grid;
+      grid-template-columns: repeat(var(--voting-columns), minmax(0, 1fr));
+      gap: clamp(8px, 1.1cqi, 12px);
+    }
+
+    .voting-layout > .timer-progress {
+      justify-self: center;
+    }
+
+    .reveal-layout {
+      width: min(100%, clamp(420px, 58cqi, 920px));
+      justify-self: center;
+      display: grid;
+      gap: clamp(12px, 2cqi, 22px);
+      align-content: center;
+    }
+
+    .reveal-layout .answer-grid {
+      width: min(100%, clamp(300px, 42cqi, 620px));
+      justify-self: center;
+    }
+
+    .reveal-answer-grid {
+      --voting-columns: 2;
+      width: min(100%, clamp(300px, 42cqi, 620px));
+      justify-self: center;
+      display: grid;
+      grid-template-columns: repeat(var(--voting-columns), minmax(0, 1fr));
+      gap: clamp(8px, 1.1cqi, 12px);
+    }
+
+    .answer-card {
+      padding: clamp(12px, 1.8cqi, 20px) clamp(16px, 2.5cqi, 28px);
+      border-radius: clamp(10px, 1.5cqi, 16px);
+      border: none;
+      background: rgba(255,255,255,0.10);
+      font: 500 clamp(0.9rem, 1.9cqi, 1.15rem)/1.5 var(--font-heading);
+      color: var(--ink);
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+    }
+
+    .answer-card.answer-card-compact {
+      min-height: clamp(52px, 7cqi, 76px);
+      padding: clamp(8px, 1.2cqi, 12px) clamp(12px, 1.6cqi, 16px);
+      border-radius: clamp(9px, 1.1cqi, 12px);
+      background: rgba(255,255,255,0.08);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+      font: 600 clamp(0.95rem, 1.2rem + 0.55vw, 1.45rem)/1.15 system-ui, sans-serif;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      text-wrap: balance;
+    }
+
+    .answer-card.real {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .answer-meta {
+      font: 500 clamp(0.65rem, 1.3cqi, 0.85rem)/1.4 system-ui, sans-serif;
+      color: var(--muted);
+      margin-top: clamp(4px, 0.6cqi, 6px);
+      transition: color 0.2s;
+    }
+
+    .reveal-summary-card.is-inactive {
+      opacity: 0.55;
+      filter: saturate(0.72);
+    }
+
+    .reveal-summary-card.is-truth {
+      background: rgba(255,255,255,0.08);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+    }
+
+    .score-list { display: grid; gap: clamp(8px, 1.1cqi, 12px); }
+
+    .m-scene[data-scene="round_results"] .scene-pad {
+      grid-template-rows: auto auto auto minmax(0, 1fr);
+      gap: clamp(10px, 1.8cqi, 22px);
+    }
+
+    .m-scene[data-scene="round_results"] .score-list {
+      min-height: 0;
+      height: 100%;
+      align-content: stretch;
+      grid-auto-rows: minmax(0, 1fr);
+    }
+
+    .score-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: clamp(14px, 2cqi, 24px);
+      padding: clamp(12px, 1.8cqi, 18px) clamp(16px, 2.2cqi, 24px);
+      border-radius: clamp(10px, 1.4cqi, 14px);
+      border: none;
+      background: color-mix(in srgb, var(--player-color, rgba(255,255,255,0.10)) 30%, rgba(18, 24, 36, 0.82) 70%);
+      font: 600 clamp(0.8rem, 1.7cqi, 1rem)/1.3 system-ui, sans-serif;
+      color: var(--ink);
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+    }
+
+    .m-scene[data-scene="round_results"] .score-row {
+      min-height: 0;
+      height: 100%;
+      padding: clamp(10px, 1.35cqi, 16px) clamp(14px, 1.9cqi, 22px);
+    }
+
+    .score-player {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: clamp(12px, 1.6cqi, 18px);
+      flex: 1;
+    }
+
+    .score-player-id {
+      display: flex;
+      align-items: center;
+      gap: clamp(10px, 1.4cqi, 14px);
+      flex-shrink: 0;
+    }
+
+    .score-player-avatar {
+      width: clamp(36px, 4.8cqi, 44px);
+      height: clamp(36px, 4.8cqi, 44px);
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(1rem, 1.8cqi, 1.3rem);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.14);
+      flex-shrink: 0;
+    }
+
+    .score-player-name {
+      font: inherit;
+      color: var(--ink);
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .score-meta {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: clamp(12px, 1.6cqi, 18px);
+      justify-content: flex-start;
+      flex: 0 1 auto;
+    }
+
+    .score-like-slot {
+      width: clamp(56px, 8cqi, 76px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .score-like-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font: 700 clamp(0.78rem, 1.4cqi, 0.92rem)/1 system-ui, sans-serif;
+      color: color-mix(in srgb, var(--ink) 90%, white 10%);
+      white-space: nowrap;
+    }
+
+    .score-like-heart {
+      font-size: 0.95em;
+      line-height: 1;
+    }
+
+    .score-player-lie-card {
+      min-width: 0;
+      display: inline-flex;
+      align-items: center;
+      max-width: min(100%, clamp(180px, 28cqi, 320px));
+      padding: clamp(8px, 1.1cqi, 11px) clamp(12px, 1.6cqi, 16px);
+      border-radius: clamp(8px, 1cqi, 10px);
+      background: rgba(13, 18, 29, 0.55);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+    }
+
+    .score-player-lie {
+      font: 600 clamp(0.8rem, 1.45cqi, 0.96rem)/1.2 system-ui, sans-serif;
+      color: color-mix(in srgb, var(--ink) 82%, white 18%);
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: color 0.2s;
+    }
+
+    .score-delta {
+      font: 700 clamp(0.9rem, 1.8cqi, 1.1rem)/1 system-ui, sans-serif;
+      color: var(--accent);
+      flex-shrink: 0;
+      transition: color 0.2s;
+    }
+
+    .score-total {
+      min-width: clamp(72px, 10cqi, 96px);
+      display: grid;
+      gap: 4px;
+      justify-items: end;
+      flex-shrink: 0;
+      text-align: right;
+    }
+
+    .score-total-label {
+      font: 600 clamp(0.64rem, 1.1cqi, 0.76rem)/1 system-ui, sans-serif;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: color-mix(in srgb, var(--ink) 56%, transparent 44%);
+      white-space: nowrap;
+    }
+
+    .score-total-value {
+      font: 800 clamp(1rem, 2cqi, 1.22rem)/1 var(--font-heading);
+      color: var(--ink);
+      white-space: nowrap;
+    }
+
+    .m-scene[data-scene="game_over"] .scene-pad {
+      grid-template-rows: auto auto minmax(0, 1fr);
+    }
+
+    .game-over-grid {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1.75fr) minmax(240px, 0.95fr);
+      gap: clamp(16px, 2.2cqi, 24px);
+      align-items: stretch;
+      overflow: hidden;
+    }
+
+    .game-over-panel {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: clamp(10px, 1.5cqi, 16px);
+      padding: clamp(12px, 1.8cqi, 22px);
+      border-radius: clamp(14px, 1.8cqi, 20px);
+      background: rgba(255,255,255,0.05);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+      overflow: hidden;
+    }
+
+    .game-over-panel-primary .score-list,
+    .game-over-panel-secondary .score-list {
+      min-height: 0;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: clamp(8px, 1.1cqi, 12px);
+      align-content: stretch;
+    }
+
+    .game-over-panel-secondary {
+      background:
+        linear-gradient(180deg, color-mix(in srgb, var(--accent-soft) 40%, rgba(255,255,255,0.02) 60%), rgba(255,255,255,0.04));
+    }
+
+    .game-over-panel-title {
+      font: 700 clamp(0.96rem, 2cqi, 1.3rem)/1.1 var(--font-heading);
+      color: var(--ink);
+    }
+
+    .game-over-panel-subtitle {
+      font: 600 clamp(0.62rem, 1.15cqi, 0.76rem)/1.2 system-ui, sans-serif;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .game-over-score-row {
+      min-height: 0;
+      flex: 1 1 0;
+      padding: clamp(10px, 1.35cqi, 16px) clamp(14px, 1.8cqi, 20px);
+    }
+
+    .game-over-score-name {
+      font: 700 clamp(1rem, 2cqi, 1.22rem)/1.2 system-ui, sans-serif;
+      color: var(--ink);
+    }
+
+    .game-over-score-row.rank-1 {
+      background: linear-gradient(180deg, rgba(255, 214, 90, 0.16), rgba(255, 214, 90, 0.09));
+      box-shadow: inset 0 0 0 1px rgba(255, 214, 90, 0.18);
+    }
+
+    .game-over-score-row.rank-2 {
+      background: linear-gradient(180deg, rgba(198, 206, 221, 0.14), rgba(198, 206, 221, 0.08));
+      box-shadow: inset 0 0 0 1px rgba(198, 206, 221, 0.16);
+    }
+
+    .game-over-score-row.rank-3 {
+      background: linear-gradient(180deg, rgba(205, 127, 50, 0.16), rgba(205, 127, 50, 0.08));
+      box-shadow: inset 0 0 0 1px rgba(205, 127, 50, 0.18);
+    }
+
+    .game-over-score-row.rank-1 .game-over-score-name,
+    .game-over-score-row.rank-1 .score-delta {
+      color: #ffd65a;
+    }
+
+    .game-over-score-row.rank-2 .game-over-score-name,
+    .game-over-score-row.rank-2 .score-delta {
+      color: #d9deea;
+    }
+
+    .game-over-score-row.rank-3 .game-over-score-name,
+    .game-over-score-row.rank-3 .score-delta {
+      color: #d79a62;
+    }
+
+    .game-over-like-row {
+      min-height: 0;
+      flex: 1 1 0;
+      align-items: center;
+      padding: clamp(10px, 1.35cqi, 16px) clamp(12px, 1.55cqi, 18px);
+    }
+
+    .game-over-like-player {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .game-over-like-player .score-player-avatar {
+      display: none;
+    }
+
+    .game-over-like-copy {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .game-over-like-stage {
+      position: relative;
+      min-width: 0;
+      min-height: clamp(2.9rem, 5.2cqi, 4.1rem);
+      display: grid;
+      align-items: center;
+    }
+
+    .game-over-like-content {
+      grid-area: 1 / 1;
+      display: grid;
+      gap: 4px;
+      opacity: 0;
+      transform: translateY(0);
+      transition: opacity 0.28s ease, transform 0.28s ease;
+      pointer-events: none;
+    }
+
+    .game-over-like-content.is-active {
+      opacity: 1;
+    }
+
+    .game-over-like-content.is-fading {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+
+    .game-over-like-name {
+      font: 700 clamp(0.96rem, 1.8cqi, 1.1rem)/1.15 system-ui, sans-serif;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .game-over-like-rank {
+      font: 600 clamp(0.64rem, 1.15cqi, 0.76rem)/1.2 system-ui, sans-serif;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .game-over-like-lie {
+      font: 700 clamp(0.88rem, 1.55cqi, 1rem)/1.2 system-ui, sans-serif;
+      color: var(--ink);
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+      text-wrap: balance;
+    }
+
+    .game-over-like-context {
+      font: 600 clamp(0.62rem, 1.05cqi, 0.72rem)/1.2 system-ui, sans-serif;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .game-over-like-total {
+      min-width: clamp(82px, 11cqi, 100px);
+      justify-items: end;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .game-over-like-total.game-over-like-stage {
+      justify-items: end;
+    }
+
+    .game-over-like-total-label {
+      font: 600 clamp(0.62rem, 1.05cqi, 0.74rem)/1.2 system-ui, sans-serif;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: color-mix(in srgb, var(--ink) 56%, transparent 44%);
+      white-space: nowrap;
+    }
+
+    .game-over-like-total-value {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font: 800 clamp(0.98rem, 1.9cqi, 1.18rem)/1 var(--font-heading);
+      color: var(--ink);
+      white-space: nowrap;
+    }
+
+    .game-over-like-total-value .score-like-heart {
+      font-size: 0.9em;
+    }
+
+    @keyframes revealCard {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes revealHeader {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .reveal-layout .voting-header {
+      opacity: 0;
+      animation: revealHeader 0.42s ease forwards;
+    }
+
+    .reveal-card {
+      opacity: 0;
+      animation: revealCard 0.6s ease forwards;
+    }
+
+    .reveal-card.is-truth {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .reveal-voters {
+      font: 600 clamp(0.65rem, 1.3cqi, 0.9rem)/1.4 system-ui, sans-serif;
+      color: var(--ink);
+      margin-top: clamp(4px, 0.6cqi, 6px);
+      transition: color 0.2s;
+    }
+
+    .reveal-scene {
+      position: relative;
+      isolation: isolate;
+    }
+
+    .reveal-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 8;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.22s ease;
+    }
+
+    .reveal-overlay.is-active {
+      opacity: 1;
+    }
+
+    .reveal-overlay-backdrop {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 50% 42%, rgba(255,255,255,0.07), transparent 34%),
+        rgba(8, 11, 16, 0.84);
+      backdrop-filter: blur(5px);
+    }
+
+    .reveal-spotlight-card {
+      position: absolute;
+      display: grid;
+      gap: clamp(14px, 2.2cqi, 22px);
+      width: calc(100% - (2 * clamp(18px, 4cqi, 48px)));
+      max-width: clamp(420px, 74cqi, 980px);
+      max-height: calc(100% - (2 * clamp(18px, 4cqi, 48px)));
+      padding: clamp(18px, 3.2cqi, 30px);
+      align-content: start;
+      overflow: auto;
+      background: linear-gradient(180deg, rgba(255,255,255,0.15), rgba(255,255,255,0.08));
+      box-shadow:
+        0 32px 90px rgba(0, 0, 0, 0.45),
+        inset 0 0 0 1px rgba(255,255,255,0.06);
+      opacity: 0;
+      transition:
+        top 0.62s cubic-bezier(0.2, 0.9, 0.24, 1),
+        left 0.62s cubic-bezier(0.2, 0.9, 0.24, 1),
+        width 0.62s cubic-bezier(0.2, 0.9, 0.24, 1),
+        height 0.62s cubic-bezier(0.2, 0.9, 0.24, 1),
+        transform 0.62s cubic-bezier(0.2, 0.9, 0.24, 1),
+        opacity 0.25s ease;
+      transform: translate(-50%, -50%);
+    }
+
+    .reveal-spotlight-card.is-live {
+      opacity: 1;
+    }
+
+    .reveal-spotlight-card.is-truth {
+      background:
+        linear-gradient(180deg, color-mix(in srgb, var(--accent-soft) 76%, white 6%), color-mix(in srgb, var(--accent-soft) 92%, black 8%));
+      box-shadow:
+        0 34px 96px rgba(0, 0, 0, 0.48),
+        inset 0 0 0 1px color-mix(in srgb, var(--accent) 28%, white 0%);
+    }
+
+    .reveal-spotlight-head {
+      display: grid;
+      gap: clamp(4px, 0.9cqi, 10px);
+    }
+
+    .reveal-spotlight-title {
+      font: 700 clamp(1.4rem, 3.6cqi, 2.6rem)/1.02 var(--font-heading);
+      color: var(--ink);
+      text-wrap: balance;
+    }
+
+    .reveal-spotlight-subtitle {
+      font: 600 clamp(0.82rem, 1.5cqi, 1rem)/1.2 system-ui, sans-serif;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .reveal-overlay-note {
+      font: 500 clamp(0.9rem, 1.8cqi, 1.08rem)/1.5 system-ui, sans-serif;
+      color: var(--ink);
+      opacity: 0.92;
+    }
+
+    .reveal-avatar-stage {
+      display: grid;
+      gap: clamp(10px, 1.6cqi, 16px);
+      align-content: start;
+      min-height: 0;
+    }
+
+    .reveal-avatar-label {
+      font: 600 clamp(0.68rem, 1.3cqi, 0.88rem)/1.2 system-ui, sans-serif;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .reveal-avatar-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: clamp(10px, 1.6cqi, 16px);
+      min-height: clamp(52px, 7.8cqi, 88px);
+      align-items: center;
+    }
+
+    .reveal-avatar-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: clamp(10px, 1.5cqi, 14px);
+      padding: clamp(8px, 1.4cqi, 12px) clamp(10px, 1.7cqi, 16px);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+      opacity: 0;
+      transform: translateY(10px) scale(0.96);
+      transition: opacity 0.25s ease, transform 0.32s ease;
+    }
+
+    .reveal-avatar-chip.is-visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .reveal-avatar {
+      width: clamp(40px, 5.6cqi, 54px);
+      height: clamp(40px, 5.6cqi, 54px);
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(1.05rem, 2.4cqi, 1.5rem);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.16);
+      flex-shrink: 0;
+    }
+
+    .reveal-avatar-name {
+      font: 700 clamp(0.92rem, 1.6cqi, 1.05rem)/1.15 system-ui, sans-serif;
+      color: var(--ink);
+    }
+
+    .reveal-final-banner {
+      display: grid;
+      gap: clamp(8px, 1.4cqi, 12px);
+      padding-top: clamp(2px, 0.4cqi, 6px);
+      min-height: clamp(56px, 8.4cqi, 94px);
+    }
+
+    .reveal-final-banner[hidden] {
+      display: none;
+    }
+
+    .reveal-final-kicker {
+      font: 600 clamp(0.68rem, 1.3cqi, 0.86rem)/1.2 system-ui, sans-serif;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .reveal-final-truth {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: fit-content;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--accent-soft) 88%, white 4%);
+      color: var(--ink);
+      font: 800 clamp(0.88rem, 1.8cqi, 1.1rem)/1 var(--font-heading);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* ── ─── PLAYER VIEW STYLES ─── ──────────────────── */
+
+    .phone {
+      width: min(430px, calc(100% - 40px));
+      min-height: calc(100vh - var(--preview-controls-height));
+      background: var(--panel);
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      overflow: hidden;
+      transition: background 0.25s;
+    }
+
+    .p-scene { display: none; }
+    .p-scene.active { display: block; }
+
+    .top {
+      padding: 28px 24px 18px;
+      background: var(--accent-soft);
+      transition: background 0.2s;
+    }
+
+    .label {
+      font-size: 0.78rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 8px;
+      transition: color 0.2s;
+    }
+
+    .p-h1 {
+      font-size: clamp(2rem, 9vw, 3rem);
+      line-height: 1;
+      font-family: var(--font-heading);
+      color: var(--ink);
+      transition: color 0.2s, font-family 0.1s;
+    }
+
+    .stack { display: grid; gap: 18px; padding: 20px 24px 28px; }
+
+    .p-scene.active[data-scene="onboarding"] {
+      min-height: calc(100vh - var(--preview-controls-height));
+      display: grid;
+      grid-template-rows: 1fr auto auto 1fr;
+      justify-items: center;
+      text-align: center;
+      padding: 24px;
+      gap: 24px;
+    }
+
+    .p-scene[data-scene="onboarding"] .top,
+    .p-scene[data-scene="onboarding"] .stack {
+      width: min(100%, 360px);
+      justify-items: center;
+    }
+
+    .p-scene[data-scene="onboarding"] .top {
+      padding: 0;
+      background: transparent;
+    }
+
+    .p-scene[data-scene="onboarding"] .stack {
+      padding: 0;
+    }
+
+    .p-scene[data-scene="onboarding"] .panel,
+    .p-scene[data-scene="onboarding"] .join-form,
+    .p-scene[data-scene="onboarding"] .field {
+      width: 100%;
+    }
+
+    .p-scene[data-scene="onboarding"] .label,
+    .p-scene[data-scene="onboarding"] .field-label {
+      text-align: center;
+    }
+
+    .p-scene[data-scene="onboarding"] .picker-grid {
+      justify-content: center;
+    }
+
+    .p-scene[data-scene="onboarding"] .emoji-picker-grid {
+      justify-content: stretch;
+    }
+
+    .panel {
+      padding: 0;
+      border-radius: 0;
+      border: none;
+      background: transparent;
+      transition: color 0.2s;
+    }
+
+    .cta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: var(--accent);
+      color: #fff;
+      font: 700 1rem/1 system-ui, sans-serif;
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .join-form { display: grid; gap: 18px; }
+    .field { display: grid; gap: 8px; }
+
+    .field-label {
+      font: 600 0.8rem/1.2 system-ui, sans-serif;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      transition: color 0.2s;
+    }
+
+    .name-input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1.5px solid var(--border);
+      font: 500 1rem/1.4 system-ui, sans-serif;
+      color: var(--ink);
+      background: rgba(255,255,255,0.06);
+      outline: none;
+      transition: border-color 0.15s, background 0.2s, color 0.2s;
+    }
+
+    .picker-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .emoji-picker-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      width: fit-content;
+      margin-inline: auto;
+      justify-items: center;
+    }
+
+    .emoji-btn {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      border: 2px solid transparent;
+      background: rgba(255,255,255,0.08);
+      font-size: 1.4rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .emoji-btn.selected { border-color: var(--accent); background: var(--accent-soft); }
+
+    .emoji-btn-more {
+      color: var(--muted);
+      font: 700 1.15rem/1 system-ui, sans-serif;
+    }
+
+    .emoji-modal[hidden] {
+      display: none !important;
+    }
+
+    .emoji-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 120;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .emoji-modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(5, 8, 14, 0.72);
+      backdrop-filter: blur(4px);
+    }
+
+    .emoji-modal-card {
+      position: relative;
+      width: min(560px, 100%);
+      max-height: min(680px, calc(100vh - 48px));
+      display: grid;
+      gap: 16px;
+      padding: 20px;
+      border-radius: 20px;
+      background: color-mix(in srgb, var(--panel) 92%, black 8%);
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.42);
+      overflow: hidden;
+    }
+
+    .emoji-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .emoji-modal-title {
+      font: 700 1.05rem/1.2 var(--font-heading);
+      color: var(--ink);
+    }
+
+    .emoji-modal-close {
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.08);
+      color: var(--ink);
+      font: 700 1rem/1 system-ui, sans-serif;
+      cursor: pointer;
+    }
+
+    .emoji-modal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 10px;
+      max-height: min(480px, calc(100vh - 180px));
+      padding-right: 4px;
+      overflow: auto;
+      align-content: start;
+    }
+
+    .color-picker-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .color-swatch {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 3px solid transparent;
+      cursor: pointer;
+      outline: 2px solid transparent;
+      justify-self: center;
+    }
+
+    .color-swatch.selected { border-color: white; outline-color: var(--ink); transform: scale(1.15); }
+
+    .color-swatch-more {
+      display: grid;
+      place-items: center;
+      background: rgba(255,255,255,0.08);
+      color: var(--muted);
+      font: 700 1rem/1 system-ui, sans-serif;
+    }
+
+    .color-modal-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 14px;
+      max-height: min(480px, calc(100vh - 180px));
+      padding: 4px 6px 4px 2px;
+      overflow: auto;
+      align-content: start;
+    }
+
+    .p-my-card { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+
+    .p-avatar {
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      flex-shrink: 0;
+    }
+
+    .p-avatar-name { display: flex; align-items: center; gap: 14px; }
+
+    .my-name {
+      font: 700 1.2rem/1.3 system-ui, sans-serif;
+      color: var(--ink);
+      transition: color 0.2s;
+    }
+
+    .edit-btn {
+      font: 600 0.85rem/1 system-ui, sans-serif;
+      color: var(--muted);
+      background: none;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 7px 13px;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .wait-panel { text-align: center; }
+    .wait-text { font: 500 0.95rem/1.6 system-ui, sans-serif; color: var(--muted); transition: color 0.2s; }
+
+    .picker-status-card {
+      display: grid;
+      gap: 8px;
+      padding: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      transition: color 0.2s;
+    }
+
+    .picker-status-label {
+      font: 600 0.75rem/1.2 system-ui, sans-serif;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      transition: color 0.2s;
+    }
+
+    .picker-status-name {
+      font: 700 1.15rem/1.2 system-ui, sans-serif;
+      color: var(--ink);
+      transition: color 0.2s;
+    }
+
+    .category-picker-panel {
+      display: grid;
+      gap: 16px;
+      padding: 18px;
+      border-radius: 20px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.06),
+        0 18px 40px rgba(0, 0, 0, 0.18);
+    }
+
+    .category-picker-header {
+      display: grid;
+      gap: 6px;
+    }
+
+    .category-picker-title {
+      font: 700 1rem/1.2 system-ui, sans-serif;
+      color: var(--ink);
+      transition: color 0.2s;
+    }
+
+    .category-picker-help {
+      font: 500 0.92rem/1.5 system-ui, sans-serif;
+      color: var(--muted);
+      transition: color 0.2s;
+    }
+
+    .category-picker-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .cat-btn-meta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 26px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--accent-soft) 82%, white 8%);
+      font: 700 0.68rem/1 system-ui, sans-serif;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .question-text { font: 500 1.05rem/1.6 system-ui, sans-serif; color: var(--ink); transition: color 0.2s; }
+
+    .answer-btn {
+      display: block;
+      width: 100%;
+      padding: 14px 0;
+      border-radius: 0;
+      border: none;
+      background: transparent;
+      font: 500 1rem/1.4 system-ui, sans-serif;
+      color: var(--ink);
+      cursor: pointer;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      transition: border-color 0.12s, color 0.2s;
+    }
+
+    .like-btn {
+      padding: 8px 14px;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      background: rgba(255,255,255,0.06);
+      font-size: 1.1rem;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: border-color 0.12s, background 0.12s;
+    }
+
+    .like-btn.liked { border-color: var(--accent); background: var(--accent-soft); }
+
+    .vote-badge { font: 600 0.8rem/1.2 system-ui, sans-serif; color: var(--muted); transition: color 0.2s; }
+
+    .answer-row { display: flex; align-items: center; gap: 12px; }
+    .answer-text-col { flex: 1; min-width: 0; }
+
+    .score-change-box {
+      padding: 16px 0 0;
+      border-radius: 0;
+      border: none;
+      background: transparent;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      text-align: center;
+      transition: color 0.2s;
+    }
+
+    .score-change-num {
+      font: 700 2rem/1 system-ui, sans-serif;
+      color: var(--accent);
+      transition: color 0.2s;
+    }
+
+    .score-change-label {
+      font: 600 0.8rem/1.2 system-ui, sans-serif;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+      transition: color 0.2s;
+    }
+
+    .final-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 0;
+      border-radius: 0;
+      border: none;
+      background: transparent;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      font: 600 1rem/1.3 system-ui, sans-serif;
+      color: var(--ink);
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .final-row.rank-1 .final-score { color: var(--accent); }
+
+    .p-inline-text {
+      font: 500 0.95rem/1.6 system-ui, sans-serif;
+      color: var(--muted);
+      transition: color 0.2s;
+    }
+
+    .cat-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      width: 100%;
+      padding: 16px 18px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.05);
+      color: var(--ink);
+      font: 700 1rem/1.15 system-ui, sans-serif;
+      border: 1px solid rgba(255,255,255,0.08);
+      cursor: pointer;
+      text-align: left;
+      transition:
+        border-color 0.15s,
+        background 0.15s,
+        color 0.2s,
+        transform 0.15s,
+        box-shadow 0.15s;
+    }
+
+    .cat-btn:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.14);
+      transform: translateY(-1px);
+    }
+
+    .panel .name-input {
+      padding-left: 0;
+      padding-right: 0;
+      border-width: 0 0 1.5px 0;
+      border-radius: 0;
+      background: transparent;
+    }
+
+    .panel .field + .field {
+      padding-top: 4px;
+    }
+
+    .panel .picker-grid {
+      padding-top: 4px;
+    }
+
+    .answer-row {
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .result-real {
+      border-color: transparent !important;
+      background: transparent !important;
+      box-shadow: none !important;
+    }
+
+    .cat-btn.is-selected {
+      background: color-mix(in srgb, var(--accent-soft) 82%, rgba(255,255,255,0.03) 18%);
+      border-color: color-mix(in srgb, var(--accent) 28%, transparent 72%);
+      box-shadow:
+        inset 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent 82%);
+      color: var(--ink);
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Controls ─────────────────────────────────────── -->
+<div id="preview-controls">
+  <div class="ctrl-group">
+    <span class="ctrl-label">View</span>
+    <div class="ctrl-pills" id="view-pills">
+      <button class="pill active" data-view="main">Main</button>
+      <button class="pill" data-view="player">Player</button>
+    </div>
+  </div>
+  <div class="ctrl-sep"></div>
+  <div class="ctrl-group">
+    <span class="ctrl-label">Theme</span>
+    <div class="ctrl-pills" id="theme-pills">
+      <button class="pill active" data-theme="1">Arcade</button>
+      <button class="pill" data-theme="2">Casino</button>
+      <button class="pill" data-theme="3">Tropical</button>
+    </div>
+  </div>
+  <div class="ctrl-sep"></div>
+  <div class="ctrl-group">
+    <span class="ctrl-label">Scene</span>
+    <select id="scene-select"></select>
+  </div>
+  <div class="ctrl-sep"></div>
+  <div class="ctrl-group">
+    <span class="ctrl-label">Debug</span>
+    <div class="ctrl-pills">
+      <button class="pill" id="stage-outline-toggle">Stage outline</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Display area ──────────────────────────────────── -->
+<div id="preview-display">
+
+  <!-- ══ MAIN VIEW ══════════════════════════════════════ -->
+  <div id="view-main">
+    <main class="shell">
+      <div class="stage">
+
+      <!-- Lobby -->
+      <div class="m-scene active" data-scene="lobby">
+        <div class="lobby">
+          <div class="lobby-left">
+            <h1 class="logo">Lie-Ability</h1>
+            <div class="qr-block">
+              <div class="qr-placeholder">QR Code</div>
+              <p class="join-hint">Scan to join</p>
+              <p class="join-url">192.168.1.1:6767/player</p>
+            </div>
+          </div>
+          <div class="lobby-right">
+            <p class="section-label">Players (4)</p>
+            <div class="player-list">
+              <div class="m-player-card">
+                <span class="player-name">Priya</span>
+                <span class="m-avatar" style="background:#e74c3c">🦊</span>
+              </div>
+              <div class="m-player-card">
+                <span class="player-name">Marcus</span>
+                <span class="m-avatar" style="background:#3498db">🤖</span>
+              </div>
+              <div class="m-player-card">
+                <span class="player-name">Saoirse</span>
+                <span class="m-avatar" style="background:#9b59b6">🦄</span>
+              </div>
+              <div class="m-player-card">
+                <span class="player-name">Dev</span>
+                <span class="m-avatar" style="background:#2ecc71">🐼</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Category Pick -->
+      <div class="m-scene" data-scene="category_pick">
+        <div class="scene-pad scene-pad-centered">
+          <h2 class="scene-heading">Saoirse</h2>
+          <p class="scene-sub">is choosing a category…</p>
+          <div class="timer-progress" role="progressbar" aria-label="Category pick timer" aria-valuemin="0" aria-valuemax="45" aria-valuenow="45"></div>
+        </div>
+      </div>
+
+      <!-- Lie Submission -->
+      <div class="m-scene" data-scene="lie_submission">
+        <div class="scene-pad scene-pad-centered">
+          <p class="scene-eyebrow">Animals</p>
+          <h2 class="scene-prompt">What is the only mammal capable of true powered flight?</h2>
+          <div class="submission-status-row lie-submission-status" aria-label="Lie submission progress">
+            <span class="submission-avatar" style="background:#e74c3c">🦊</span>
+            <span class="submission-avatar" style="background:#3498db">🤖</span>
+            <span class="submission-avatar" style="background:#9b59b6">🦄</span>
+            <span class="submission-avatar pending" style="background:#2ecc71">🐼</span>
+          </div>
+          <div class="timer-progress" role="progressbar" aria-label="Lie submission timer" aria-valuemin="0" aria-valuemax="45" aria-valuenow="45"></div>
+        </div>
+      </div>
+
+      <!-- Voting -->
+      <div class="m-scene" data-scene="voting">
+        <div class="scene-pad scene-pad-centered">
+          <div class="voting-layout">
+            <div class="voting-header">
+              <p class="scene-eyebrow">Animals</p>
+              <h2 class="scene-prompt">What is the only mammal capable of true powered flight?</h2>
+              <div class="voting-spacer" aria-hidden="true"></div>
+            </div>
+            <div class="answer-grid voting-answer-grid">
+              <div class="answer-card answer-card-compact">Flying Squirrel</div>
+              <div class="answer-card answer-card-compact">Bat</div>
+              <div class="answer-card answer-card-compact">Sugar Glider</div>
+              <div class="answer-card answer-card-compact">Colugo</div>
+            </div>
+            <div class="timer-progress" role="progressbar" aria-label="Voting timer" aria-valuemin="0" aria-valuemax="45" aria-valuenow="45"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Likes / The Reveal -->
+      <div class="m-scene reveal-scene" data-scene="likes">
+        <div class="scene-pad scene-pad-centered">
+          <div class="reveal-layout">
+            <div class="voting-header">
+              <p class="scene-eyebrow">Animals</p>
+              <h2 class="scene-prompt">What is the only mammal capable of true powered flight?</h2>
+              <div class="voting-spacer" aria-hidden="true"></div>
+            </div>
+            <div class="answer-grid reveal-answer-grid">
+              <div class="answer-card answer-card-compact reveal-card reveal-summary-card" data-answer-id="flying-squirrel" style="animation-delay:0s">Flying Squirrel</div>
+              <div class="answer-card answer-card-compact reveal-card reveal-summary-card is-inactive" data-answer-id="sugar-glider" style="animation-delay:0.1s">Sugar Glider</div>
+              <div class="answer-card answer-card-compact reveal-card reveal-summary-card" data-answer-id="bat" style="animation-delay:0.2s">Bat</div>
+              <div class="answer-card answer-card-compact reveal-card reveal-summary-card" data-answer-id="colugo" style="animation-delay:0.3s">Colugo</div>
+            </div>
+          </div>
+        </div>
+        <div class="reveal-overlay" aria-hidden="true">
+          <div class="reveal-overlay-backdrop"></div>
+          <article class="answer-card reveal-spotlight-card" id="reveal-spotlight-card">
+            <div class="reveal-spotlight-head">
+              <p class="reveal-spotlight-title" id="reveal-spotlight-title">Flying Squirrel</p>
+              <p class="reveal-spotlight-subtitle" id="reveal-spotlight-subtitle">Priya's lie</p>
+            </div>
+            <p class="reveal-overlay-note" id="reveal-overlay-note">Marcus voted for this.</p>
+            <div class="reveal-avatar-stage">
+              <p class="reveal-avatar-label" id="reveal-avatar-label">Voters revealed</p>
+              <div class="reveal-avatar-row" id="reveal-avatar-row"></div>
+            </div>
+            <div class="reveal-final-banner" id="reveal-final-banner" hidden>
+              <p class="reveal-final-kicker" id="reveal-final-kicker">Submitted by</p>
+              <div id="reveal-final-content"></div>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <!-- Round Results -->
+      <div class="m-scene" data-scene="round_results">
+        <div class="scene-pad">
+          <p class="scene-eyebrow">Results</p>
+          <h2 class="scene-heading">The answer was…</h2>
+          <div class="answer-card real">Bat</div>
+          <div class="score-list">
+            <div class="score-row" style="--player-color:#db2777;">
+              <div class="score-player">
+                <div class="score-player-id">
+                  <span class="score-player-avatar" style="background:#db2777;">🦄</span>
+                  <span class="score-player-name">Saoirse</span>
+                </div>
+                <div class="score-meta">
+                  <span class="score-player-lie-card">
+                    <span class="score-player-lie">Shadow Finch</span>
+                  </span>
+                  <span class="score-like-slot">
+                    <span class="score-like-count"><span class="score-like-heart">❤️</span><span>x1</span></span>
+                  </span>
+                </div>
+              </div>
+              <div class="score-total">
+                <span class="score-total-label">Total Points</span>
+                <span class="score-total-value">14</span>
+              </div>
+            </div>
+            <div class="score-row" style="--player-color:#7c3aed;">
+              <div class="score-player">
+                <div class="score-player-id">
+                  <span class="score-player-avatar" style="background:#7c3aed;">🦊</span>
+                  <span class="score-player-name">Priya</span>
+                </div>
+                <div class="score-meta">
+                  <span class="score-player-lie-card">
+                    <span class="score-player-lie">Night Hawk</span>
+                  </span>
+                  <span class="score-like-slot">
+                    <span class="score-like-count"><span class="score-like-heart">❤️</span><span>x2</span></span>
+                  </span>
+                </div>
+              </div>
+              <div class="score-total">
+                <span class="score-total-label">Total Points</span>
+                <span class="score-total-value">11</span>
+              </div>
+            </div>
+            <div class="score-row" style="--player-color:#2563eb;">
+              <div class="score-player">
+                <div class="score-player-id">
+                  <span class="score-player-avatar" style="background:#2563eb;">🐼</span>
+                  <span class="score-player-name">Marcus</span>
+                </div>
+                <div class="score-meta">
+                  <span class="score-player-lie-card">
+                    <span class="score-player-lie">Cave Sparrow</span>
+                  </span>
+                  <span class="score-like-slot"></span>
+                </div>
+              </div>
+              <div class="score-total">
+                <span class="score-total-label">Total Points</span>
+                <span class="score-total-value">8</span>
+              </div>
+            </div>
+            <div class="score-row" style="--player-color:#0f766e;">
+              <div class="score-player">
+                <div class="score-player-id">
+                  <span class="score-player-avatar" style="background:#0f766e;">🐸</span>
+                  <span class="score-player-name">Dev</span>
+                </div>
+                <div class="score-meta">
+                  <span class="score-player-lie-card">
+                    <span class="score-player-lie">Moon Mouse</span>
+                  </span>
+                  <span class="score-like-slot">
+                    <span class="score-like-count"><span class="score-like-heart">❤️</span><span>x3</span></span>
+                  </span>
+                </div>
+              </div>
+              <div class="score-total">
+                <span class="score-total-label">Total Points</span>
+                <span class="score-total-value">5</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game Over -->
+      <div class="m-scene" data-scene="game_over">
+        <div class="scene-pad">
+          <p class="scene-eyebrow">Game Over</p>
+          <h2 class="scene-heading">Final Scores</h2>
+          <div class="game-over-grid">
+            <section class="game-over-panel game-over-panel-primary">
+              <div>
+                <p class="game-over-panel-subtitle">Scoreboard</p>
+                <h3 class="game-over-panel-title">Player Scores</h3>
+              </div>
+              <div class="score-list">
+                <div class="score-row game-over-score-row rank-1"><span class="game-over-score-name">1. Saoirse</span><span class="score-delta">14</span></div>
+                <div class="score-row game-over-score-row rank-2"><span class="game-over-score-name">2. Priya</span><span class="score-delta">11</span></div>
+                <div class="score-row game-over-score-row rank-3"><span class="game-over-score-name">3. Marcus</span><span class="score-delta">8</span></div>
+                <div class="score-row game-over-score-row"><span class="game-over-score-name">4. Dev</span><span class="score-delta">5</span></div>
+              </div>
+            </section>
+            <section class="game-over-panel game-over-panel-secondary">
+              <div>
+                <p class="game-over-panel-subtitle">Audience Favorite</p>
+                <h3 class="game-over-panel-title">Most Total Likes</h3>
+              </div>
+              <div class="score-list">
+                <div class="score-row game-over-like-row" style="--player-color:#0f766e;">
+                  <div class="game-over-like-player">
+                    <span class="game-over-like-copy game-over-like-stage">
+                      <span class="game-over-like-content is-active" data-role="primary">
+                        <span class="game-over-like-name">Dev</span>
+                        <span class="game-over-like-rank">1st place</span>
+                      </span>
+                      <span class="game-over-like-content" data-role="primary-alt" aria-hidden="true"></span>
+                    </span>
+                  </div>
+                  <span class="game-over-like-total game-over-like-stage">
+                    <span class="game-over-like-content is-active" data-role="stat">
+                      <span class="game-over-like-total-label">All Lies</span>
+                      <span class="game-over-like-total-value"><span class="score-like-heart">❤️</span><span>7</span></span>
+                    </span>
+                    <span class="game-over-like-content" data-role="stat-alt" aria-hidden="true"></span>
+                  </span>
+                </div>
+                <div class="score-row game-over-like-row" style="--player-color:#7c3aed;">
+                  <div class="game-over-like-player">
+                    <span class="game-over-like-copy game-over-like-stage">
+                      <span class="game-over-like-content is-active" data-role="primary">
+                        <span class="game-over-like-name">Priya</span>
+                        <span class="game-over-like-rank">2nd place</span>
+                      </span>
+                      <span class="game-over-like-content" data-role="primary-alt" aria-hidden="true"></span>
+                    </span>
+                  </div>
+                  <span class="game-over-like-total game-over-like-stage">
+                    <span class="game-over-like-content is-active" data-role="stat">
+                      <span class="game-over-like-total-label">All Lies</span>
+                      <span class="game-over-like-total-value"><span class="score-like-heart">❤️</span><span>5</span></span>
+                    </span>
+                    <span class="game-over-like-content" data-role="stat-alt" aria-hidden="true"></span>
+                  </span>
+                </div>
+                <div class="score-row game-over-like-row" style="--player-color:#db2777;">
+                  <div class="game-over-like-player">
+                    <span class="game-over-like-copy game-over-like-stage">
+                      <span class="game-over-like-content is-active" data-role="primary">
+                        <span class="game-over-like-name">Saoirse</span>
+                        <span class="game-over-like-rank">3rd place</span>
+                      </span>
+                      <span class="game-over-like-content" data-role="primary-alt" aria-hidden="true"></span>
+                    </span>
+                  </div>
+                  <span class="game-over-like-total game-over-like-stage">
+                    <span class="game-over-like-content is-active" data-role="stat">
+                      <span class="game-over-like-total-label">All Lies</span>
+                      <span class="game-over-like-total-value"><span class="score-like-heart">❤️</span><span>3</span></span>
+                    </span>
+                    <span class="game-over-like-content" data-role="stat-alt" aria-hidden="true"></span>
+                  </span>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+
+      </div><!-- .stage -->
+    </main>
+  </div><!-- #view-main -->
+
+  <!-- ══ PLAYER VIEW ════════════════════════════════════ -->
+  <div id="view-player" hidden>
+    <main class="phone">
+
+      <!-- Onboarding -->
+      <div class="p-scene active" data-scene="onboarding">
+        <section class="top">
+          <p class="label">Lie-Ability</p>
+          <h1 class="p-h1">Join In</h1>
+        </section>
+        <section class="stack">
+          <div class="panel">
+            <div class="join-form">
+              <div class="field">
+                <p class="field-label">Your name</p>
+                <input type="text" class="name-input" value="Alex" readonly>
+              </div>
+              <div class="field">
+                <p class="field-label">Pick an emoji</p>
+                <div class="picker-grid emoji-picker-grid">
+                  <button class="emoji-btn selected" type="button">😎</button>
+                  <button class="emoji-btn" type="button">🎭</button>
+                  <button class="emoji-btn" type="button">🦊</button>
+                  <button class="emoji-btn" type="button">🐸</button>
+                  <button class="emoji-btn" type="button">🦁</button>
+                  <button class="emoji-btn" type="button">🐼</button>
+                  <button class="emoji-btn" type="button">🦄</button>
+                  <button class="emoji-btn emoji-btn-more" type="button" data-open-emoji-modal aria-haspopup="dialog" aria-controls="emoji-modal">+</button>
+                </div>
+              </div>
+              <div class="field">
+                <p class="field-label">Pick a colour</p>
+                <div class="picker-grid color-picker-grid">
+                  <button class="color-swatch selected" type="button" style="background:#e74c3c" aria-label="Red" title="Red"></button>
+                  <button class="color-swatch" type="button" style="background:#e67e22" aria-label="Orange" title="Orange"></button>
+                  <button class="color-swatch" type="button" style="background:#f1c40f" aria-label="Yellow" title="Yellow"></button>
+                  <button class="color-swatch" type="button" style="background:#2ecc71" aria-label="Green" title="Green"></button>
+                  <button class="color-swatch" type="button" style="background:#1abc9c" aria-label="Teal" title="Teal"></button>
+                  <button class="color-swatch" type="button" style="background:#3498db" aria-label="Blue" title="Blue"></button>
+                  <button class="color-swatch" type="button" style="background:#9b59b6" aria-label="Purple" title="Purple"></button>
+                  <button class="color-swatch color-swatch-more" type="button" data-open-color-modal aria-haspopup="dialog" aria-controls="color-modal" title="More colours" aria-label="More colours">+</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <button class="cta">Join Game</button>
+        </section>
+        <div class="emoji-modal" id="emoji-modal" hidden>
+          <div class="emoji-modal-backdrop" data-close-emoji-modal></div>
+          <div class="emoji-modal-card" role="dialog" aria-modal="true" aria-labelledby="emoji-modal-title">
+            <div class="emoji-modal-header">
+              <h2 class="emoji-modal-title" id="emoji-modal-title">Choose an emoji</h2>
+              <button class="emoji-modal-close" type="button" data-close-emoji-modal aria-label="Close emoji picker">×</button>
+            </div>
+            <div class="emoji-modal-grid"></div>
+          </div>
+        </div>
+        <div class="emoji-modal" id="color-modal" hidden>
+          <div class="emoji-modal-backdrop" data-close-color-modal></div>
+          <div class="emoji-modal-card" role="dialog" aria-modal="true" aria-labelledby="color-modal-title">
+            <div class="emoji-modal-header">
+              <h2 class="emoji-modal-title" id="color-modal-title">Choose a colour</h2>
+              <button class="emoji-modal-close" type="button" data-close-color-modal aria-label="Close colour picker">×</button>
+            </div>
+            <div class="color-modal-grid"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Player Lobby -->
+      <div class="p-scene" data-scene="lobby">
+        <section class="top">
+          <p class="label">Lie-Ability</p>
+          <h1 class="p-h1">You're in!</h1>
+        </section>
+        <section class="stack">
+          <div class="panel p-my-card">
+            <div class="p-avatar-name">
+              <span class="p-avatar" style="background:#e74c3c">🦊</span>
+              <span class="my-name">Priya</span>
+            </div>
+            <button class="edit-btn">Edit</button>
+          </div>
+          <div class="panel wait-panel">
+            <p class="wait-text">Waiting for the host to start the game…</p>
+          </div>
+        </section>
+      </div>
+
+      <!-- Category Pick -->
+      <div class="p-scene" data-scene="category_pick">
+        <section class="top">
+          <p class="label">Category Pick</p>
+          <h1 class="p-h1">Saoirse is picking…</h1>
+        </section>
+        <section class="stack">
+          <div class="panel wait-panel">
+            <p class="wait-text">Waiting for Saoirse to pick a category…</p>
+          </div>
+        </section>
+      </div>
+
+      <div class="p-scene" data-scene="category_pick_active">
+        <section class="top">
+          <p class="label">Category Pick</p>
+          <h1 class="p-h1">Pick the next category</h1>
+        </section>
+        <section class="stack">
+          <div class="picker-status-card">
+            <p class="picker-status-label">Current picker</p>
+            <p class="picker-status-name">Saoirse, it’s your turn</p>
+          </div>
+          <div class="category-picker-panel">
+            <div class="category-picker-header">
+              <p class="category-picker-title">Choose a category</p>
+              <p class="category-picker-help">Pick the topic everyone will bluff on this round.</p>
+            </div>
+            <div class="category-picker-list">
+              <button class="cat-btn is-selected">
+                <span>Animals</span>
+                <span class="cat-btn-meta">Selected</span>
+              </button>
+              <button class="cat-btn">Food</button>
+              <button class="cat-btn">Geography</button>
+            </div>
+          </div>
+          <button class="cta">Lock In Category</button>
+        </section>
+      </div>
+
+      <!-- Lie Submission -->
+      <div class="p-scene" data-scene="lie_submission">
+        <section class="top">
+          <p class="label">Submit Your Lie</p>
+          <p class="question-text" style="margin-top:8px;font-size:1.05rem;line-height:1.6">
+            What is the only mammal capable of true powered flight?
+          </p>
+        </section>
+        <section class="stack">
+          <div class="panel">
+            <input type="text" class="name-input" placeholder="Enter your lie…" readonly>
+          </div>
+          <button class="cta">Submit Lie</button>
+        </section>
+      </div>
+
+      <!-- Voting -->
+      <div class="p-scene" data-scene="voting">
+        <section class="top">
+          <p class="label">Voting</p>
+          <h1 class="p-h1">Which is true?</h1>
+        </section>
+        <section class="stack">
+          <button class="answer-btn">Flying Squirrel</button>
+          <button class="answer-btn">Bat</button>
+          <button class="answer-btn">Sugar Glider</button>
+          <button class="answer-btn">Colugo</button>
+        </section>
+      </div>
+
+      <!-- Likes -->
+      <div class="p-scene" data-scene="likes">
+        <section class="top">
+          <p class="label">Likes</p>
+          <h1 class="p-h1">Like your fave!</h1>
+        </section>
+        <section class="stack">
+          <div class="panel">
+            <div class="answer-row">
+              <div class="answer-text-col">
+                <p style="font:500 1rem/1.4 system-ui,sans-serif;color:var(--ink)">Flying Squirrel</p>
+                <p class="vote-badge">1 vote</p>
+              </div>
+              <button class="like-btn liked">❤️</button>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="answer-row">
+              <div class="answer-text-col">
+                <p style="font:500 1rem/1.4 system-ui,sans-serif;color:var(--ink)">Bat</p>
+                <p class="vote-badge">2 votes</p>
+              </div>
+              <button class="like-btn">❤️</button>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="answer-row">
+              <div class="answer-text-col">
+                <p style="font:500 1rem/1.4 system-ui,sans-serif;color:var(--ink)">Sugar Glider</p>
+                <p class="vote-badge">0 votes</p>
+              </div>
+              <button class="like-btn">❤️</button>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="answer-row">
+              <div class="answer-text-col">
+                <p style="font:500 1rem/1.4 system-ui,sans-serif;color:var(--ink)">Colugo</p>
+                <p class="vote-badge">1 vote</p>
+              </div>
+              <button class="like-btn">❤️</button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Round Results -->
+      <div class="p-scene" data-scene="round_results">
+        <section class="top">
+          <p class="label">Results</p>
+          <h1 class="p-h1">The answer was…</h1>
+        </section>
+        <section class="stack">
+          <div class="panel result-real">
+            <p class="question-text">Bat</p>
+          </div>
+          <div class="score-change-box">
+            <p class="score-change-label">Your score</p>
+            <p class="score-change-num">+3</p>
+          </div>
+        </section>
+      </div>
+
+      <!-- Game Over -->
+      <div class="p-scene" data-scene="game_over">
+        <section class="top">
+          <p class="label">Game Over</p>
+          <h1 class="p-h1">Final Scores</h1>
+        </section>
+        <section class="stack">
+          <div class="final-row rank-1">
+            <span>1. Saoirse</span>
+            <span class="final-score">14</span>
+          </div>
+          <div class="final-row">
+            <span>2. Priya</span>
+            <span class="final-score">11</span>
+          </div>
+          <div class="final-row">
+            <span>3. Marcus</span>
+            <span class="final-score">8</span>
+          </div>
+          <div class="final-row">
+            <span>4. Dev</span>
+            <span class="final-score">5</span>
+          </div>
+        </section>
+      </div>
+
+    </main>
+  </div><!-- #view-player -->
+
+</div><!-- #preview-display -->
+
+<script>
+  const THEMES = {
+    1: {
+      name: 'Arcade',
+      fonts: { heading: "'Rajdhani', Impact, system-ui, sans-serif", body: "system-ui, sans-serif" },
+      main: {
+        'bg':           'linear-gradient(135deg, #0d0f14 0%, #151a23 100%)',
+        'panel':        'rgba(22, 27, 38, 0.95)',
+        'ink':          '#e8edf5',
+        'muted':        '#6b7a90',
+        'accent':       '#39ff6a',
+        'accent-soft':  'rgba(57, 255, 106, 0.12)',
+        'accent-hover': '#2ddf58',
+        'border':       'rgba(57, 255, 106, 0.18)',
+        'shadow':       '0 24px 60px rgba(0, 0, 0, 0.55)',
+        'danger':       '#ff3d6b',
+      },
+      player: {
+        'bg':           'linear-gradient(180deg, #0d0f14 0%, #151a23 100%)',
+        'panel':        'rgba(22, 27, 38, 0.95)',
+        'ink':          '#e8edf5',
+        'muted':        '#6b7a90',
+        'accent':       '#39ff6a',
+        'accent-soft':  'rgba(57, 255, 106, 0.12)',
+        'accent-hover': '#2ddf58',
+        'border':       'rgba(57, 255, 106, 0.18)',
+        'shadow':       '0 18px 45px rgba(0, 0, 0, 0.55)',
+        'danger':       '#ff3d6b',
+      },
+    },
+    2: {
+      name: 'Casino',
+      fonts: { heading: "Georgia, 'Times New Roman', serif", body: "system-ui, sans-serif" },
+      main: {
+        'bg':           'linear-gradient(135deg, #0b0e1a 0%, #111827 100%)',
+        'panel':        'rgba(17, 24, 39, 0.96)',
+        'ink':          '#f5ead0',
+        'muted':        '#7d7560',
+        'accent':       '#c9a84c',
+        'accent-soft':  'rgba(201, 168, 76, 0.13)',
+        'accent-hover': '#b8953f',
+        'border':       'rgba(201, 168, 76, 0.2)',
+        'shadow':       '0 24px 60px rgba(0, 0, 0, 0.6)',
+        'danger':       '#c53030',
+      },
+      player: {
+        'bg':           'linear-gradient(180deg, #0b0e1a 0%, #111827 100%)',
+        'panel':        'rgba(17, 24, 39, 0.96)',
+        'ink':          '#f5ead0',
+        'muted':        '#7d7560',
+        'accent':       '#d4a847',
+        'accent-soft':  'rgba(212, 168, 71, 0.13)',
+        'accent-hover': '#bf973a',
+        'border':       'rgba(212, 168, 71, 0.2)',
+        'shadow':       '0 18px 45px rgba(0, 0, 0, 0.6)',
+        'danger':       '#c53030',
+      },
+    },
+    3: {
+      name: 'Tropical',
+      fonts: { heading: "'Paytone One', Impact, sans-serif", body: "system-ui, sans-serif" },
+      main: {
+        'bg':           'linear-gradient(135deg, #ff6b35 0%, #f7931e 100%)',
+        'panel':        'rgba(255, 255, 255, 0.92)',
+        'ink':          '#1a1a2e',
+        'muted':        '#5a4a3a',
+        'accent':       '#2bc54a',
+        'accent-soft':  'rgba(43, 197, 74, 0.14)',
+        'accent-hover': '#22a83d',
+        'border':       'rgba(26, 26, 46, 0.12)',
+        'shadow':       '0 24px 60px rgba(200, 80, 20, 0.22)',
+        'danger':       '#e91e8c',
+      },
+      player: {
+        'bg':           'linear-gradient(180deg, #fff3eb 0%, #ffe0c8 100%)',
+        'panel':        'rgba(255, 255, 255, 0.95)',
+        'ink':          '#1a1a2e',
+        'muted':        '#6b5040',
+        'accent':       '#e8300a',
+        'accent-soft':  'rgba(232, 48, 10, 0.1)',
+        'accent-hover': '#c92a08',
+        'border':       'rgba(26, 26, 46, 0.1)',
+        'shadow':       '0 18px 45px rgba(200, 80, 20, 0.18)',
+        'danger':       '#e91e8c',
+      },
+    },
+  };
+
+  const SCENES = {
+    main:   ['lobby', 'category_pick', 'lie_submission', 'voting', 'likes', 'round_results', 'game_over'],
+    player: ['onboarding', 'lobby', 'category_pick', 'category_pick_active', 'lie_submission', 'voting', 'likes', 'round_results', 'game_over'],
+  };
+
+  const SCENE_LABELS = {
+    lobby: 'Lobby',
+    onboarding: 'Onboarding',
+    category_pick: 'Category Pick',
+    category_pick_active: 'Category Pick (Active)',
+    lie_submission: 'Lie Submission',
+    voting: 'Voting',
+    likes: 'Likes',
+    round_results: 'Round Results',
+    game_over: 'Game Over',
+  };
+
+  const PREVIEW_REVEAL_SEQUENCE = [
+    {
+      id: 'flying-squirrel',
+      answer: 'Flying Squirrel',
+      subtitle: "Priya's lie",
+      votes: 1,
+      isTruth: false,
+      voters: [
+        { name: 'Marcus', emoji: '🤖', color: '#3498db' },
+      ],
+      submitter: { name: 'Priya', emoji: '🦊', color: '#e74c3c' },
+    },
+    {
+      id: 'sugar-glider',
+      answer: 'Sugar Glider',
+      subtitle: "Saoirse's lie",
+      votes: 0,
+      isTruth: false,
+      voters: [],
+      submitter: { name: 'Saoirse', emoji: '🦄', color: '#9b59b6' },
+    },
+    {
+      id: 'colugo',
+      answer: 'Colugo',
+      subtitle: "Dev's lie",
+      votes: 1,
+      isTruth: false,
+      voters: [
+        { name: 'Saoirse', emoji: '🦄', color: '#9b59b6' },
+      ],
+      submitter: { name: 'Dev', emoji: '🐼', color: '#2ecc71' },
+    },
+    {
+      id: 'bat',
+      answer: 'Bat',
+      subtitle: 'The Truth',
+      votes: 2,
+      isTruth: true,
+      voters: [
+        { name: 'Priya', emoji: '🦊', color: '#e74c3c' },
+        { name: 'Dev', emoji: '🐼', color: '#2ecc71' },
+      ],
+      submitter: null,
+    },
+  ];
+
+  const GAME_OVER_LIKES_ROTATION = [
+    {
+      player: 'Dev',
+      rankLabel: '1st place',
+      totalLikes: 7,
+      lies: [
+        { text: 'Moon Mouse', likes: 3 },
+        { text: 'Velvet Antler', likes: 2 },
+        { text: 'Shadow Cactus', likes: 2 },
+      ],
+    },
+    {
+      player: 'Priya',
+      rankLabel: '2nd place',
+      totalLikes: 5,
+      lies: [
+        { text: 'Night Hawk', likes: 2 },
+        { text: 'Golden Koi', likes: 2 },
+        { text: 'Paper Lynx', likes: 1 },
+      ],
+    },
+    {
+      player: 'Saoirse',
+      rankLabel: '3rd place',
+      totalLikes: 3,
+      lies: [
+        { text: 'Shadow Finch', likes: 1 },
+        { text: 'Comet Bloom', likes: 1 },
+        { text: 'Silver Moth', likes: 1 },
+      ],
+    },
+  ];
+
+  const DEFAULT_ONBOARDING_EMOJIS = ['😎', '🎭', '🦊', '🐸', '🦁', '🐼', '🦄'];
+
+  const EMOJI_CATALOG = [
+    { emoji: '😀', label: 'grinning face' },
+    { emoji: '😁', label: 'beaming face' },
+    { emoji: '😂', label: 'face with tears of joy' },
+    { emoji: '🤣', label: 'rolling on the floor laughing' },
+    { emoji: '😊', label: 'smiling face with smiling eyes' },
+    { emoji: '😍', label: 'smiling face with heart-eyes' },
+    { emoji: '😎', label: 'smiling face with sunglasses' },
+    { emoji: '🤩', label: 'star-struck' },
+    { emoji: '🥳', label: 'partying face' },
+    { emoji: '😇', label: 'smiling face with halo' },
+    { emoji: '🤠', label: 'cowboy hat face' },
+    { emoji: '🧐', label: 'face with monocle' },
+    { emoji: '🤓', label: 'nerd face' },
+    { emoji: '😺', label: 'grinning cat' },
+    { emoji: '😸', label: 'grinning cat with smiling eyes' },
+    { emoji: '😻', label: 'smiling cat with heart-eyes' },
+    { emoji: '🙈', label: 'see-no-evil monkey' },
+    { emoji: '🙉', label: 'hear-no-evil monkey' },
+    { emoji: '🙊', label: 'speak-no-evil monkey' },
+    { emoji: '👻', label: 'ghost' },
+    { emoji: '💀', label: 'skull' },
+    { emoji: '👽', label: 'alien' },
+    { emoji: '🤖', label: 'robot' },
+    { emoji: '👾', label: 'alien monster' },
+    { emoji: '🎃', label: 'jack-o-lantern' },
+    { emoji: '🎭', label: 'performing arts' },
+    { emoji: '🧙', label: 'mage' },
+    { emoji: '🧛', label: 'vampire' },
+    { emoji: '🧞', label: 'genie' },
+    { emoji: '🧜', label: 'merperson' },
+    { emoji: '🦄', label: 'unicorn' },
+    { emoji: '🐶', label: 'dog' },
+    { emoji: '🐺', label: 'wolf' },
+    { emoji: '🦊', label: 'fox' },
+    { emoji: '🐱', label: 'cat' },
+    { emoji: '🦁', label: 'lion' },
+    { emoji: '🐯', label: 'tiger' },
+    { emoji: '🐴', label: 'horse' },
+    { emoji: '🦓', label: 'zebra' },
+    { emoji: '🦌', label: 'deer' },
+    { emoji: '🦬', label: 'bison' },
+    { emoji: '🐮', label: 'cow' },
+    { emoji: '🐷', label: 'pig' },
+    { emoji: '🐗', label: 'boar' },
+    { emoji: '🐭', label: 'mouse' },
+    { emoji: '🐹', label: 'hamster' },
+    { emoji: '🐰', label: 'rabbit' },
+    { emoji: '🐻', label: 'bear' },
+    { emoji: '🐼', label: 'panda' },
+    { emoji: '🐨', label: 'koala' },
+    { emoji: '🐸', label: 'frog' },
+    { emoji: '🐵', label: 'monkey face' },
+    { emoji: '🦍', label: 'gorilla' },
+    { emoji: '🦧', label: 'orangutan' },
+    { emoji: '🐔', label: 'chicken' },
+    { emoji: '🐧', label: 'penguin' },
+    { emoji: '🦉', label: 'owl' },
+    { emoji: '🦅', label: 'eagle' },
+    { emoji: '🦜', label: 'parrot' },
+    { emoji: '🦆', label: 'duck' },
+    { emoji: '🦢', label: 'swan' },
+    { emoji: '🦚', label: 'peacock' },
+    { emoji: '🐣', label: 'hatching chick' },
+    { emoji: '🐙', label: 'octopus' },
+    { emoji: '🦑', label: 'squid' },
+    { emoji: '🦀', label: 'crab' },
+    { emoji: '🦞', label: 'lobster' },
+    { emoji: '🦐', label: 'shrimp' },
+    { emoji: '🐠', label: 'tropical fish' },
+    { emoji: '🐟', label: 'fish' },
+    { emoji: '🐬', label: 'dolphin' },
+    { emoji: '🐳', label: 'spouting whale' },
+    { emoji: '🦈', label: 'shark' },
+    { emoji: '🐊', label: 'crocodile' },
+    { emoji: '🐢', label: 'turtle' },
+    { emoji: '🐍', label: 'snake' },
+    { emoji: '🦎', label: 'lizard' },
+    { emoji: '🦖', label: 't-rex' },
+    { emoji: '🦕', label: 'sauropod' },
+    { emoji: '🐲', label: 'dragon face' },
+    { emoji: '🐉', label: 'dragon' },
+    { emoji: '🦋', label: 'butterfly' },
+    { emoji: '🐝', label: 'honeybee' },
+    { emoji: '🐞', label: 'lady beetle' },
+    { emoji: '🪲', label: 'beetle' },
+    { emoji: '🪳', label: 'cockroach' },
+    { emoji: '🕷️', label: 'spider' },
+    { emoji: '🦂', label: 'scorpion' },
+    { emoji: '🌸', label: 'cherry blossom' },
+    { emoji: '🌻', label: 'sunflower' },
+    { emoji: '🌼', label: 'blossom' },
+    { emoji: '🌵', label: 'cactus' },
+    { emoji: '🍀', label: 'four leaf clover' },
+    { emoji: '🌈', label: 'rainbow' },
+    { emoji: '⭐', label: 'star' },
+    { emoji: '🌙', label: 'crescent moon' },
+    { emoji: '☀️', label: 'sun' },
+    { emoji: '⚡', label: 'high voltage' },
+    { emoji: '🔥', label: 'fire' },
+    { emoji: '❄️', label: 'snowflake' },
+    { emoji: '🍎', label: 'red apple' },
+    { emoji: '🍊', label: 'tangerine' },
+    { emoji: '🍋', label: 'lemon' },
+    { emoji: '🍉', label: 'watermelon' },
+    { emoji: '🍇', label: 'grapes' },
+    { emoji: '🍓', label: 'strawberry' },
+    { emoji: '🍒', label: 'cherries' },
+    { emoji: '🍑', label: 'peach' },
+    { emoji: '🥑', label: 'avocado' },
+    { emoji: '🍕', label: 'pizza' },
+    { emoji: '🍔', label: 'hamburger' },
+    { emoji: '🌮', label: 'taco' },
+    { emoji: '🍜', label: 'steaming bowl' },
+    { emoji: '🍩', label: 'doughnut' },
+    { emoji: '🍪', label: 'cookie' },
+    { emoji: '🧁', label: 'cupcake' },
+    { emoji: '🍦', label: 'soft ice cream' },
+    { emoji: '⚽', label: 'soccer ball' },
+    { emoji: '🏀', label: 'basketball' },
+    { emoji: '🏈', label: 'american football' },
+    { emoji: '⚾', label: 'baseball' },
+    { emoji: '🎾', label: 'tennis' },
+    { emoji: '🎲', label: 'game die' },
+    { emoji: '🎯', label: 'direct hit' },
+    { emoji: '🎸', label: 'guitar' },
+    { emoji: '🎹', label: 'musical keyboard' },
+    { emoji: '🥁', label: 'drum' },
+    { emoji: '🚀', label: 'rocket' },
+    { emoji: '🛸', label: 'flying saucer' },
+    { emoji: '🚗', label: 'automobile' },
+    { emoji: '🏎️', label: 'racing car' },
+    { emoji: '🚲', label: 'bicycle' },
+    { emoji: '⛵', label: 'sailboat' },
+    { emoji: '✈️', label: 'airplane' },
+    { emoji: '🎈', label: 'balloon' },
+    { emoji: '🎁', label: 'wrapped gift' },
+    { emoji: '💎', label: 'gem stone' },
+    { emoji: '👑', label: 'crown' },
+    { emoji: '🪄', label: 'magic wand' },
+    { emoji: '❤️', label: 'red heart' },
+    { emoji: '🧠', label: 'brain' },
+  ].sort((a, b) => a.label.localeCompare(b.label));
+
+  const COLOR_CATALOG = [
+    { value: '#1abc9c', label: 'aqua teal' },
+    { value: '#ff8c69', label: 'apricot coral' },
+    { value: '#00bcd4', label: 'azure cyan' },
+    { value: '#7c4dff', label: 'blue violet' },
+    { value: '#8b5cf6', label: 'bright amethyst' },
+    { value: '#0ea5e9', label: 'bright sky' },
+    { value: '#f97316', label: 'burnt orange' },
+    { value: '#ec4899', label: 'candy pink' },
+    { value: '#14b8a6', label: 'caribbean teal' },
+    { value: '#06b6d4', label: 'cerulean' },
+    { value: '#ef4444', label: 'cherry red' },
+    { value: '#84cc16', label: 'citron' },
+    { value: '#6366f1', label: 'cosmic indigo' },
+    { value: '#10b981', label: 'emerald' },
+    { value: '#059669', label: 'forest green' },
+    { value: '#f43f5e', label: 'fuchsia rose' },
+    { value: '#22c55e', label: 'grass green' },
+    { value: '#eab308', label: 'goldenrod' },
+    { value: '#facc15', label: 'honey yellow' },
+    { value: '#3b82f6', label: 'ice blue' },
+    { value: '#818cf8', label: 'iris' },
+    { value: '#f59e0b', label: 'marigold' },
+    { value: '#fb7185', label: 'melon pink' },
+    { value: '#e11d48', label: 'mulberry red' },
+    { value: '#a855f7', label: 'orchid' },
+    { value: '#e67e22', label: 'orange' },
+    { value: '#f472b6', label: 'peony pink' },
+    { value: '#8b5a2b', label: 'russet' },
+    { value: '#ef4444', label: 'scarlet' },
+    { value: '#64748b', label: 'slate' },
+    { value: '#0f766e', label: 'spruce' },
+    { value: '#2dd4bf', label: 'tropical mint' },
+    { value: '#38bdf8', label: 'turquoise sky' },
+    { value: '#9b59b6', label: 'violet' },
+    { value: '#e91e63', label: 'wild magenta' },
+    { value: '#f1c40f', label: 'yellow' },
+    { value: '#e74c3c', label: 'red' },
+    { value: '#2ecc71', label: 'green' },
+    { value: '#3498db', label: 'blue' },
+  ]
+    .filter((item, index, list) => list.findIndex(candidate => candidate.value === item.value) === index)
+    .sort((a, b) => a.label.localeCompare(b.label));
+
+  let currentView = 'main';
+  let currentTheme = 1;
+  let currentScene = 'lobby';
+  let revealSequenceToken = 0;
+  let gameOverSequenceToken = 0;
+
+  function applyTheme(themeId, view) {
+    const theme = THEMES[themeId];
+    const vars = theme[view];
+    const root = document.documentElement;
+    for (const [key, val] of Object.entries(vars)) {
+      root.style.setProperty('--' + key, val);
+    }
+    root.style.setProperty('--font-heading', theme.fonts.heading);
+    root.style.setProperty('--font-body', theme.fonts.body);
+  }
+
+  function setView(view) {
+    currentView = view;
+    document.getElementById('view-main').hidden = (view !== 'main');
+    document.getElementById('view-player').hidden = (view !== 'player');
+    populateSceneSelect(view);
+    const firstScene = SCENES[view][0];
+    setScene(firstScene);
+    applyTheme(currentTheme, view);
+  }
+
+  function setScene(sceneName) {
+    if (!(currentView === 'main' && sceneName === 'likes')) {
+      stopRevealSequence();
+    }
+    if (!(currentView === 'main' && sceneName === 'game_over')) {
+      stopGameOverLikesRotation();
+    }
+    currentScene = sceneName;
+    const viewEl = document.getElementById('view-' + currentView);
+    viewEl.querySelectorAll('.m-scene, .p-scene').forEach(s => s.classList.remove('active'));
+    const sceneEl = viewEl.querySelector('[data-scene="' + sceneName + '"]');
+    if (sceneEl) sceneEl.classList.add('active');
+    if (sceneEl && currentView === 'main' && sceneName === 'likes') {
+      restartRevealAnimations(sceneEl);
+    }
+    if (sceneEl && currentView === 'main' && sceneName === 'game_over') {
+      startGameOverLikesRotation(sceneEl);
+    }
+    document.getElementById('scene-select').value = sceneName;
+  }
+
+  function restartRevealAnimations(sceneEl) {
+    sceneEl.querySelectorAll('.voting-header, .reveal-card').forEach(el => {
+      el.style.animation = 'none';
+      void el.offsetWidth;
+      el.style.animation = '';
+    });
+    startRevealSequence(sceneEl);
+  }
+
+  function stopRevealSequence() {
+    revealSequenceToken += 1;
+    const overlay = document.querySelector('.reveal-overlay');
+    const spotlightCard = document.getElementById('reveal-spotlight-card');
+    const avatarRow = document.getElementById('reveal-avatar-row');
+    const finalBanner = document.getElementById('reveal-final-banner');
+    const finalContent = document.getElementById('reveal-final-content');
+    if (overlay) overlay.classList.remove('is-active');
+    if (spotlightCard) {
+      spotlightCard.classList.remove('is-live', 'is-truth');
+      spotlightCard.style.top = '';
+      spotlightCard.style.left = '';
+      spotlightCard.style.width = '';
+      spotlightCard.style.height = '';
+    }
+    if (avatarRow) avatarRow.innerHTML = '';
+    if (finalContent) finalContent.innerHTML = '';
+    if (finalBanner) finalBanner.hidden = true;
+  }
+
+  function startRevealSequence(sceneEl) {
+    stopRevealSequence();
+    const token = revealSequenceToken;
+    runRevealSequence(sceneEl, token);
+  }
+
+  function getRevealExpandedMetrics(sceneEl) {
+    const sceneRect = sceneEl.getBoundingClientRect();
+    const inset = Math.min(48, sceneRect.width * 0.04, sceneRect.height * 0.04);
+    return {
+      sceneRect,
+      targetWidth: Math.min(sceneRect.width - (inset * 2), 920),
+      maxHeight: Math.max(240, sceneRect.height - (inset * 2))
+    };
+  }
+
+  function measureRevealExpandedHeight(spotlightCard, targetWidth, maxHeight) {
+    const prevWidth = spotlightCard.style.width;
+    const prevHeight = spotlightCard.style.height;
+
+    spotlightCard.style.width = `${targetWidth}px`;
+    spotlightCard.style.height = 'auto';
+
+    const measuredHeight = Math.min(Math.max(spotlightCard.scrollHeight, 220), maxHeight);
+
+    spotlightCard.style.width = prevWidth;
+    spotlightCard.style.height = prevHeight;
+
+    return measuredHeight;
+  }
+
+  function resizeRevealSpotlight(sceneEl, spotlightCard) {
+    const { sceneRect, targetWidth, maxHeight } = getRevealExpandedMetrics(sceneEl);
+    const targetHeight = measureRevealExpandedHeight(spotlightCard, targetWidth, maxHeight);
+
+    spotlightCard.style.top = `${sceneRect.height / 2}px`;
+    spotlightCard.style.left = `${sceneRect.width / 2}px`;
+    spotlightCard.style.width = `${targetWidth}px`;
+    spotlightCard.style.height = `${targetHeight}px`;
+  }
+
+  async function runRevealSequence(sceneEl, token) {
+    await sleep(1150);
+    while (isRevealSequenceCurrent(token)) {
+      const order = PREVIEW_REVEAL_SEQUENCE
+        .filter(item => item.votes >= 1)
+        .sort((a, b) => {
+          if (a.isTruth !== b.isTruth) return a.isTruth ? 1 : -1;
+          return a.votes - b.votes;
+        });
+
+      for (const item of order) {
+        await runRevealStep(sceneEl, item, token);
+        if (!isRevealSequenceCurrent(token)) return;
+        await sleep(450);
+      }
+
+      if (!isRevealSequenceCurrent(token)) return;
+      await sleep(1000);
+    }
+  }
+
+  async function runRevealStep(sceneEl, item, token) {
+    const sourceCard = sceneEl.querySelector(`[data-answer-id="${item.id}"]`);
+    const overlay = sceneEl.querySelector('.reveal-overlay');
+    const spotlightCard = document.getElementById('reveal-spotlight-card');
+    const titleEl = document.getElementById('reveal-spotlight-title');
+    const subtitleEl = document.getElementById('reveal-spotlight-subtitle');
+    const noteEl = document.getElementById('reveal-overlay-note');
+    const avatarLabelEl = document.getElementById('reveal-avatar-label');
+    const avatarRow = document.getElementById('reveal-avatar-row');
+    const finalBanner = document.getElementById('reveal-final-banner');
+    const finalKicker = document.getElementById('reveal-final-kicker');
+    const finalContent = document.getElementById('reveal-final-content');
+
+    if (!sourceCard || !overlay || !spotlightCard || !titleEl || !subtitleEl || !noteEl || !avatarLabelEl || !avatarRow || !finalBanner || !finalKicker || !finalContent) {
+      return;
+    }
+
+    const sceneRect = sceneEl.getBoundingClientRect();
+    const sourceRect = sourceCard.getBoundingClientRect();
+    const sourceCenterX = sourceRect.left - sceneRect.left + sourceRect.width / 2;
+    const sourceCenterY = sourceRect.top - sceneRect.top + sourceRect.height / 2;
+
+    spotlightCard.classList.toggle('is-truth', item.isTruth);
+    titleEl.textContent = item.answer;
+    subtitleEl.textContent = item.subtitle;
+    noteEl.textContent = item.votes === 1 ? '1 vote is being revealed.' : `${item.votes} votes are being revealed.`;
+    avatarLabelEl.textContent = item.voters.length === 1 ? 'Voter revealed' : 'Voters revealed';
+    avatarRow.innerHTML = '';
+    finalContent.innerHTML = '';
+    finalBanner.hidden = true;
+
+    spotlightCard.style.top = `${sourceCenterY}px`;
+    spotlightCard.style.left = `${sourceCenterX}px`;
+    spotlightCard.style.width = `${sourceRect.width}px`;
+    spotlightCard.style.height = `${sourceRect.height}px`;
+    spotlightCard.classList.remove('is-live');
+    overlay.classList.add('is-active');
+
+    void spotlightCard.offsetWidth;
+
+    spotlightCard.classList.add('is-live');
+    resizeRevealSpotlight(sceneEl, spotlightCard);
+
+    await sleep(700);
+    if (!isRevealSequenceCurrent(token)) return;
+
+    for (const voter of item.voters) {
+      const chip = makeRevealAvatarChip(voter);
+      avatarRow.appendChild(chip);
+      requestAnimationFrame(() => chip.classList.add('is-visible'));
+      noteEl.textContent = `${voter.name} voted for this.`;
+      resizeRevealSpotlight(sceneEl, spotlightCard);
+      await sleep(550);
+      if (!isRevealSequenceCurrent(token)) return;
+    }
+
+    await sleep(250);
+    if (!isRevealSequenceCurrent(token)) return;
+
+    finalBanner.hidden = false;
+    if (item.isTruth) {
+      finalKicker.textContent = 'Final reveal';
+      finalContent.innerHTML = '<div class="reveal-final-truth">This was the truth</div>';
+      noteEl.textContent = 'Now the real answer is revealed.';
+    } else {
+      finalKicker.textContent = 'Submitted by';
+      const submitterChip = makeRevealAvatarChip(item.submitter);
+      finalContent.replaceChildren(submitterChip);
+      requestAnimationFrame(() => submitterChip.classList.add('is-visible'));
+      noteEl.textContent = `${item.submitter.name} submitted this lie.`;
+    }
+    resizeRevealSpotlight(sceneEl, spotlightCard);
+
+    await sleep(950);
+    if (!isRevealSequenceCurrent(token)) return;
+
+    spotlightCard.style.top = `${sourceCenterY}px`;
+    spotlightCard.style.left = `${sourceCenterX}px`;
+    spotlightCard.style.width = `${sourceRect.width}px`;
+    spotlightCard.style.height = `${sourceRect.height}px`;
+
+    await sleep(640);
+    if (!isRevealSequenceCurrent(token)) return;
+
+    overlay.classList.remove('is-active');
+    spotlightCard.classList.remove('is-live');
+    avatarRow.innerHTML = '';
+    finalContent.innerHTML = '';
+    finalBanner.hidden = true;
+  }
+
+  function makeRevealAvatarChip(person) {
+    const chip = document.createElement('div');
+    chip.className = 'reveal-avatar-chip';
+    chip.innerHTML = `
+      <span class="reveal-avatar" style="background:${person.color}">${person.emoji}</span>
+      <span class="reveal-avatar-name">${person.name}</span>
+    `;
+    return chip;
+  }
+
+  function isRevealSequenceCurrent(token) {
+    return token === revealSequenceToken && currentView === 'main' && currentScene === 'likes';
+  }
+
+  function stopGameOverLikesRotation() {
+    gameOverSequenceToken += 1;
+    const sceneEl = document.querySelector('#view-main .m-scene[data-scene="game_over"]');
+    if (!sceneEl) return;
+
+    const rows = sceneEl.querySelectorAll('.game-over-like-row');
+    rows.forEach((row, index) => {
+      const playerData = GAME_OVER_LIKES_ROTATION[index];
+      if (!playerData) return;
+      applyGameOverLikeState(row, {
+        kind: 'summary',
+        player: playerData.player,
+        rankLabel: playerData.rankLabel,
+        totalLikes: playerData.totalLikes,
+      });
+    });
+  }
+
+  function startGameOverLikesRotation(sceneEl) {
+    stopGameOverLikesRotation();
+    const token = gameOverSequenceToken;
+    runGameOverLikesRotation(sceneEl, token);
+  }
+
+  async function runGameOverLikesRotation(sceneEl, token) {
+    await sleep(900);
+    while (isGameOverRotationCurrent(token)) {
+      const rows = [...sceneEl.querySelectorAll('.game-over-like-row')];
+      const rowStates = rows
+        .map((row, index) => {
+          const playerData = GAME_OVER_LIKES_ROTATION[index];
+          if (!row || !playerData) return null;
+          return {
+            row,
+            playerData,
+            sequence: [
+              ...playerData.lies.map(lie => ({
+                kind: 'lie',
+                lie,
+              })),
+              {
+                kind: 'summary',
+                player: playerData.player,
+                rankLabel: playerData.rankLabel,
+                totalLikes: playerData.totalLikes,
+              },
+            ],
+          };
+        })
+        .filter(Boolean);
+
+      if (!rowStates.length) return;
+
+      const maxSequenceLength = Math.max(...rowStates.map(item => item.sequence.length));
+      for (let stepIndex = 0; stepIndex < maxSequenceLength; stepIndex += 1) {
+        const transitions = rowStates
+          .map(item => {
+            const state = item.sequence[stepIndex % item.sequence.length];
+            return transitionGameOverLikeRow(item.row, item.playerData, state, token);
+          });
+
+        await Promise.all(transitions);
+        if (!isGameOverRotationCurrent(token)) return;
+
+        const sampleState = rowStates[0].sequence[stepIndex % rowStates[0].sequence.length];
+        await sleep(sampleState.kind === 'summary' ? 1400 : 1100);
+        if (!isGameOverRotationCurrent(token)) return;
+      }
+    }
+  }
+
+  async function transitionGameOverLikeRow(row, playerData, state, token) {
+    const nextState = state.kind === 'summary'
+      ? state
+      : {
+          kind: 'lie',
+          lie: state.lie,
+          player: playerData.player,
+          rankLabel: playerData.rankLabel,
+          totalLikes: playerData.totalLikes,
+        };
+
+    const layers = getGameOverLikeLayers(row);
+    if (!layers) return;
+
+    const {
+      activePrimary,
+      inactivePrimary,
+      activeStat,
+      inactiveStat,
+    } = layers;
+
+    inactivePrimary.classList.remove('is-active', 'is-fading');
+    inactiveStat.classList.remove('is-active', 'is-fading');
+    renderGameOverLikeState(inactivePrimary, inactiveStat, nextState);
+    void row.offsetWidth;
+
+    activePrimary.classList.add('is-fading');
+    activeStat.classList.add('is-fading');
+    inactivePrimary.classList.add('is-active');
+    inactiveStat.classList.add('is-active');
+
+    await sleep(280);
+    if (!isGameOverRotationCurrent(token)) return;
+
+    activePrimary.classList.remove('is-active', 'is-fading');
+    activeStat.classList.remove('is-active', 'is-fading');
+  }
+
+  function applyGameOverLikeState(row, state) {
+    const layers = getGameOverLikeLayers(row);
+    if (!layers) return;
+    renderGameOverLikeState(layers.activePrimary, layers.activeStat, state);
+  }
+
+  function getGameOverLikeLayers(row) {
+    const primaryLayers = row.querySelectorAll('[data-role="primary"], [data-role="primary-alt"]');
+    const statLayers = row.querySelectorAll('[data-role="stat"], [data-role="stat-alt"]');
+    if (primaryLayers.length < 2 || statLayers.length < 2) return null;
+
+    const activePrimary = [...primaryLayers].find(layer => layer.classList.contains('is-active')) || primaryLayers[0];
+    const inactivePrimary = [...primaryLayers].find(layer => layer !== activePrimary) || primaryLayers[1];
+    const activeStat = [...statLayers].find(layer => layer.classList.contains('is-active')) || statLayers[0];
+    const inactiveStat = [...statLayers].find(layer => layer !== activeStat) || statLayers[1];
+
+    return {
+      activePrimary,
+      inactivePrimary,
+      activeStat,
+      inactiveStat,
+    };
+  }
+
+  function renderGameOverLikeState(primary, stat, state) {
+    if (!primary || !stat) return;
+
+    if (state.kind === 'summary') {
+      primary.innerHTML = `
+        <span class="game-over-like-name">${state.player}</span>
+        <span class="game-over-like-rank">${state.rankLabel}</span>
+      `;
+      stat.innerHTML = `
+        <span class="game-over-like-total-label">All Lies</span>
+        <span class="game-over-like-total-value"><span class="score-like-heart">❤️</span><span>${state.totalLikes}</span></span>
+      `;
+      return;
+    }
+
+    primary.innerHTML = `
+      <span class="game-over-like-lie">${state.lie.text}</span>
+      <span class="game-over-like-context">${state.player}'s lie</span>
+    `;
+    stat.innerHTML = `
+      <span class="game-over-like-total-label">This Lie</span>
+      <span class="game-over-like-total-value"><span class="score-like-heart">❤️</span><span>${state.lie.likes}</span></span>
+    `;
+  }
+
+  function isGameOverRotationCurrent(token) {
+    return token === gameOverSequenceToken && currentView === 'main' && currentScene === 'game_over';
+  }
+
+  function setupEmojiPickerPreview() {
+    const onboardingScene = document.querySelector('#view-player .p-scene[data-scene="onboarding"]');
+    const modal = document.getElementById('emoji-modal');
+    if (!onboardingScene || !modal) return;
+
+    const openButton = onboardingScene.querySelector('[data-open-emoji-modal]');
+    const closeButtons = modal.querySelectorAll('[data-close-emoji-modal]');
+    const defaultButtons = onboardingScene.querySelectorAll('.emoji-picker-grid .emoji-btn:not(.emoji-btn-more)');
+    const modalGrid = modal.querySelector('.emoji-modal-grid');
+
+    let selectedButton = onboardingScene.querySelector('.emoji-picker-grid .emoji-btn.selected');
+
+    function setSelectedButton(button) {
+      if (selectedButton) selectedButton.classList.remove('selected');
+      selectedButton = button;
+      if (selectedButton) selectedButton.classList.add('selected');
+    }
+
+    function openModal() {
+      modal.hidden = false;
+    }
+
+    function closeModal() {
+      modal.hidden = true;
+    }
+
+    function buildEmojiModalGrid() {
+      if (!modalGrid) return;
+      modalGrid.innerHTML = '';
+      EMOJI_CATALOG.forEach(item => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'emoji-btn';
+        button.textContent = item.emoji;
+        button.title = item.label;
+        button.setAttribute('aria-label', item.label);
+        button.addEventListener('click', () => {
+          if (!selectedButton) return;
+          selectedButton.textContent = item.emoji;
+          setSelectedButton(selectedButton);
+          closeModal();
+        });
+        modalGrid.appendChild(button);
+      });
+    }
+
+    defaultButtons.forEach(button => {
+      button.addEventListener('click', () => setSelectedButton(button));
+    });
+
+    closeButtons.forEach(button => {
+      button.addEventListener('click', closeModal);
+    });
+
+    if (openButton) {
+      openButton.addEventListener('click', openModal);
+    }
+
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && !modal.hidden) {
+        closeModal();
+      }
+    });
+
+    buildEmojiModalGrid();
+  }
+
+  function setupColorPickerPreview() {
+    const onboardingScene = document.querySelector('#view-player .p-scene[data-scene="onboarding"]');
+    const modal = document.getElementById('color-modal');
+    if (!onboardingScene || !modal) return;
+
+    const openButton = onboardingScene.querySelector('[data-open-color-modal]');
+    const closeButtons = modal.querySelectorAll('[data-close-color-modal]');
+    const defaultButtons = onboardingScene.querySelectorAll('.color-picker-grid .color-swatch:not(.color-swatch-more)');
+    const modalGrid = modal.querySelector('.color-modal-grid');
+
+    let selectedButton = onboardingScene.querySelector('.color-picker-grid .color-swatch.selected');
+
+    function setSelectedButton(button) {
+      if (selectedButton) selectedButton.classList.remove('selected');
+      selectedButton = button;
+      if (selectedButton) selectedButton.classList.add('selected');
+    }
+
+    function openModal() {
+      modal.hidden = false;
+    }
+
+    function closeModal() {
+      modal.hidden = true;
+    }
+
+    function buildColorModalGrid() {
+      if (!modalGrid) return;
+      modalGrid.innerHTML = '';
+      COLOR_CATALOG.forEach(item => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'color-swatch';
+        button.style.background = item.value;
+        button.title = item.label;
+        button.setAttribute('aria-label', item.label);
+        button.addEventListener('click', () => {
+          if (!selectedButton) return;
+          selectedButton.style.background = item.value;
+          selectedButton.title = item.label;
+          selectedButton.setAttribute('aria-label', item.label);
+          setSelectedButton(selectedButton);
+          closeModal();
+        });
+        modalGrid.appendChild(button);
+      });
+    }
+
+    defaultButtons.forEach(button => {
+      button.addEventListener('click', () => setSelectedButton(button));
+    });
+
+    if (openButton) {
+      openButton.addEventListener('click', openModal);
+    }
+
+    closeButtons.forEach(button => {
+      button.addEventListener('click', closeModal);
+    });
+
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && !modal.hidden) {
+        closeModal();
+      }
+    });
+
+    buildColorModalGrid();
+  }
+
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  function populateSceneSelect(view) {
+    const sel = document.getElementById('scene-select');
+    sel.innerHTML = SCENES[view].map(s =>
+      `<option value="${s}">${SCENE_LABELS[s] || s}</option>`
+    ).join('');
+  }
+
+  function updateVotingLayouts() {
+    document.querySelectorAll('.voting-answer-grid').forEach(grid => {
+      const count = grid.children.length;
+      let columns = 1;
+      if (count === 2) columns = 2;
+      else if (count <= 4) columns = 2;
+      else if (count <= 6) columns = 3;
+      else columns = Math.ceil(Math.sqrt(count));
+      grid.style.setProperty('--voting-columns', String(columns));
+    });
+  }
+
+  // Wire view pills
+  document.querySelectorAll('#view-pills .pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#view-pills .pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      setView(btn.dataset.view);
+    });
+  });
+
+  // Wire theme pills
+  document.querySelectorAll('#theme-pills .pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#theme-pills .pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentTheme = parseInt(btn.dataset.theme);
+      applyTheme(currentTheme, currentView);
+    });
+  });
+
+  // Wire scene select
+  document.getElementById('scene-select').addEventListener('change', e => {
+    setScene(e.target.value);
+  });
+
+  // Stage outline toggle
+  document.getElementById('stage-outline-toggle').addEventListener('click', function() {
+    this.classList.toggle('active');
+    document.querySelector('.stage').style.boxShadow =
+      this.classList.contains('active') ? 'inset 0 0 0 2px rgba(255,100,100,0.8)' : '';
+  });
+
+  // Init
+  populateSceneSelect('main');
+  applyTheme(1, 'main');
+  setupEmojiPickerPreview();
+  setupColorPickerPreview();
+  updateVotingLayouts();
+  setScene('lobby');
+</script>
+</body>
+</html>
