@@ -181,9 +181,11 @@ def start_server() -> threading.Thread:
     server_thread = threading.Thread(
         target=lambda: socketio.run(
             flask_app,
+            host="0.0.0.0",
             port=6767,
             use_reloader=False,
             debug=LAUNCH_MODE == "debug",
+            allow_unsafe_werkzeug=True,
         ),
         daemon=True,
     )
